@@ -20,6 +20,7 @@ dependencies {
   implementation(ktorLibs.server.netty)
   implementation(ktorLibs.server.websockets)
   implementation(libs.logback.classic)
+  implementation(ktorLibs.server.callLogging)
 
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
 

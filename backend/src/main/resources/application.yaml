@@ -9,3 +9,4 @@ ktor:
       - com.example.com.SerializationKt.configureSerialization
       - com.example.com.WebsocketsKt.configureWebsockets
       - com.example.com.RoutingKt.configureRouting
+      - com.example.com.CallLoggingKt.configureCallLogging
