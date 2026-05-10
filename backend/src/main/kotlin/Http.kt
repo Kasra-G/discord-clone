@@ -6,13 +6,13 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.response.*
 
 fun Application.configureHttp() {
-  install(CORS) {
-    allowMethod(HttpMethod.Options)
-    allowMethod(HttpMethod.Put)
-    allowMethod(HttpMethod.Delete)
-    allowMethod(HttpMethod.Patch)
-    allowHeader(HttpHeaders.Authorization)
-    allowHeader("MyCustomHeader")
-    anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
-  }
+  // install(CORS) {
+  //   allowMethod(HttpMethod.Options)
+  //   allowMethod(HttpMethod.Put)
+  //   allowMethod(HttpMethod.Delete)
+  //   allowMethod(HttpMethod.Patch)
+  //   allowHeader(HttpHeaders.Authorization)
+  //   allowHeader("MyCustomHeader")
+  //   anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
+  // }
 }
