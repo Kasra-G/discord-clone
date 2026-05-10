@@ -1,8 +1,8 @@
-import { BACKEND_URL } from '$env/static/private';
+import { PUBLIC_BACKEND_URL } from "$env/static/public";
 
 export const load = async () => {
-	const response = await fetch(BACKEND_URL);
-	return {
-		serverMessage: `hello from backend: ${await response.text()}`
-	};
+	// const response = await fetch(PUBLIC_BACKEND_URL);
+	// return {
+	// 	serverMessage: `hello from backend: ${await response.text()}`
+	// };
 };
