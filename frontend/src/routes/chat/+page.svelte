@@ -42,7 +42,6 @@
 
 	<div class="messages-container">
 		<div class="chatbox" bind:this={div}>
-			<div class="message">MESSAGE</div>
 			{#each messages as msg}
 				<div class="message">{msg}</div>
 			{/each}
