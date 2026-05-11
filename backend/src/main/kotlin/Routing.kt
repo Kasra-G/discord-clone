@@ -14,10 +14,7 @@ fun Application.configureRouting() {
         if (frame is Frame.Text) {
           val text = frame.readText()
           log.info("Received $text")
-          outgoing.send(Frame.Text("YOU SAID: $text"))
-          if (text.equals("bye", ignoreCase = true)) {
-            close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
-          }
+          outgoing.send(Frame.Text("Anonymous: $text"))
         }
       }
     }
