@@ -1,22 +1,13 @@
 <script lang="ts">
-	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	import { getMotd } from '$lib/backend.remote';
+	import { messageService } from '$lib/websocket.svelte';
 	import { tick } from 'svelte';
 
-	let ws: WebSocket;
-
-	$effect(() => {
-		ws = new WebSocket(`${PUBLIC_BACKEND_URL}/ws`);
-		ws.onmessage = (msg) => {
-			messages.push(msg.data);
-		};
-	});
-
 	let message = $state('');
-	const messages: string[] = $state([]);
+	const messages: string[] = $derived(messageService.messages);
 
 	const sendMessage = () => {
-		ws.send(message);
+		messageService.send(message);
 		message = '';
 	};
 
@@ -55,6 +46,7 @@
 
 <div class="wrapper">
 	<h3>Message of the Day: {await getMotd()}</h3>
+	<h3>Server status: {messageService.status}</h3>
 
 	<div class="messages-container">
 		<div class="chatbox-outer" bind:this={div}>
