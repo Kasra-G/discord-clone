@@ -22,9 +22,10 @@ fun Application.configureRouting() {
     get("/") { call.respondText("Hello, World!") }
     webSocket("/ws") {
       val userId = counter.fetchAndIncrement()
-      log.info("connected $userId")
-      send("SYSTEM: Welcome User-$userId, you have connected to the chat room")
-      messageResponseFlow.emit("User-$userId: has joined the chat room")
+      val username = "User-$userId"
+      log.info("connected $username")
+      send("SYSTEM: Welcome $username, you have connected to the chat room")
+      messageResponseFlow.emit("$username has joined the chat room")
 
       val job = launch { sharedFlow.collect { message -> send(message) } }
 
@@ -32,13 +33,16 @@ fun Application.configureRouting() {
             incoming.consumeEach { frame ->
               if (frame is Frame.Text) {
                 val message = frame.readText()
-                log.info("Broadcasting message $message by user $userId")
-                messageResponseFlow.emit("User-$userId: $message")
+                log.info("Broadcasting message $message by user $username")
+                messageResponseFlow.emit("$username: $message")
               }
             }
           }
           .onFailure { exception -> println("WebSocket exception: ${exception.localizedMessage}") }
-          .also { job.cancel() }
+          .also {
+            job.cancel()
+            messageResponseFlow.emit("$username has left the chat room")
+          }
     }
   }
 }
