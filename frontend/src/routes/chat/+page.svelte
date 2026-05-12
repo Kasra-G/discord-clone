@@ -22,18 +22,34 @@
 
 	let div: HTMLDivElement | undefined = $state();
 
+	let isChatOverflowing = $derived.by(() => {
+		if (!div) return false;
+		messages.length;
+
+		return div.scrollHeight > div.clientHeight;
+	});
+
+	// scroll on first overflow
+	$effect.pre(() => {
+		if (!div) return;
+		if (isChatOverflowing) {
+			tick().then(() => {
+				div!.scrollTo(0, div!.scrollHeight);
+			});
+		}
+	});
+
+	// scroll when bottom
 	$effect.pre(() => {
 		if (!div) return;
 
 		messages.length;
 
-		if (div.offsetHeight + div.scrollTop > div.scrollHeight - 20) {
+		if (div.scrollHeight - div.scrollTop - div.clientHeight < 1) {
 			tick().then(() => {
 				div!.scrollTo(0, div!.scrollHeight);
 			});
 		}
-
-		div.scrollTo(0, div.scrollHeight);
 	});
 </script>
 
@@ -41,10 +57,12 @@
 	<h3>Message of the Day: {await getMotd()}</h3>
 
 	<div class="messages-container">
-		<div class="chatbox" bind:this={div}>
-			{#each messages as msg}
-				<div class="message">{msg}</div>
-			{/each}
+		<div class="chatbox-outer" bind:this={div}>
+			<div class="chatbox-inner">
+				{#each messages.toReversed() as msg}
+					<div class="message">{msg}</div>
+				{/each}
+			</div>
 		</div>
 		<form>
 			<input
@@ -73,14 +91,17 @@
 		min-height: 0;
 	}
 
-	.chatbox {
-		background-color: gray;
+	.chatbox-outer {
 		overflow-y: auto;
 		flex-grow: 1;
 		border: 2px solid black;
+		background-color: gray;
+	}
+
+	.chatbox-inner {
+		min-height: 100%;
 		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
+		flex-direction: column-reverse;
 	}
 
 	.message {
