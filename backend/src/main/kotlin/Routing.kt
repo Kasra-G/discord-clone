@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
+private const val SYSTEM_USER = "SYSTEM"
+
 @OptIn(ExperimentalAtomicApi::class)
 fun Application.configureRouting() {
   val messageResponseFlow = MutableSharedFlow<UserBroadcastMessage>()
@@ -31,13 +33,13 @@ fun Application.configureRouting() {
 
       sendSerialized(
           UserBroadcastMessage(
-              username = "SYSTEM",
+              sender = SYSTEM_USER,
               message = "Welcome $username, you have connected to the chat room",
           )
       )
       messageResponseFlow.emit(
           UserBroadcastMessage(
-              username = "SYSTEM",
+              sender = SYSTEM_USER,
               message = "$username has joined the chat room",
           )
       )
@@ -52,7 +54,7 @@ fun Application.configureRouting() {
 
               val broadcastMessage =
                   UserBroadcastMessage(
-                      username = username,
+                      sender = username,
                       message = messageRequest.message,
                   )
               log.info("Broadcasting $broadcastMessage")
@@ -64,7 +66,7 @@ fun Application.configureRouting() {
             job.cancel()
             messageResponseFlow.emit(
                 UserBroadcastMessage(
-                    username = "SYSTEM",
+                    sender = SYSTEM_USER,
                     message = "$username has left the chat room",
                 )
             )
@@ -77,7 +79,7 @@ fun Application.configureRouting() {
 
 @Serializable
 data class UserBroadcastMessage(
-    val username: String,
+    val sender: String,
     val message: String,
-    val receivedAt: Instant = Clock.System.now(),
+    val timestamp: Instant = Clock.System.now(),
 )

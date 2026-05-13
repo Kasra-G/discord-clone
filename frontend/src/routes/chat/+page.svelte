@@ -5,8 +5,8 @@
 
 	interface UserMessage {
 		readonly message: string;
-		readonly username: string;
-		readonly receivedAt: string;
+		readonly sender: string;
+		readonly timestamp: string;
 	}
 
 	let message = $state('');
@@ -59,7 +59,7 @@
 			<div class="chatbox-inner">
 				{#each messages.toReversed() as msg}
 					<div class="message">
-						User: {msg.username} time: {msg.receivedAt} Message: {msg.message}
+						User: {msg.sender} time: {msg.timestamp} Message: {msg.message}
 					</div>
 				{/each}
 			</div>
