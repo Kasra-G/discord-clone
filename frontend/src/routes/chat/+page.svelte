@@ -7,7 +7,7 @@
 	const messages: string[] = $derived(messageService.messages);
 
 	const sendMessage = () => {
-		messageService.send(message);
+		messageService.sendMessage(message);
 		message = '';
 	};
 

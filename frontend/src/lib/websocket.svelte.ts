@@ -44,8 +44,12 @@ class MessageService {
 		});
 	}
 
-	send(message: string) {
-		this.ws?.send(message);
+	sendMessage(message: string) {
+		this.ws?.send(
+			JSON.stringify({
+				message: message
+			})
+		);
 	}
 
 	private resetReconnectSettings() {

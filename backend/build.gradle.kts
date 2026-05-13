@@ -1,5 +1,6 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
+  kotlin("plugin.serialization") version "2.3.20"
   alias(ktorLibs.plugins.ktor)
   id("com.ncorti.ktfmt.gradle") version "0.26.0"
 }
@@ -18,11 +19,13 @@ dependencies {
   implementation(ktorLibs.server.core)
   implementation(ktorLibs.server.cors)
   implementation(ktorLibs.server.netty)
+  implementation(ktorLibs.serialization.kotlinx.json)
   implementation(ktorLibs.server.websockets)
   implementation(libs.logback.classic)
   implementation(ktorLibs.server.callLogging)
 
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
   testImplementation(kotlin("test"))
   testImplementation(ktorLibs.server.testHost)

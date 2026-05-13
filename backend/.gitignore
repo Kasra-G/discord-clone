@@ -2,3 +2,5 @@ build/
 .gradle/
 .env
 kls_database.db
+.idea/
+.kotlin/
