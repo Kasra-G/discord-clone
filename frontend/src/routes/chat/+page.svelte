@@ -3,8 +3,14 @@
 	import { messageService } from '$lib/websocket.svelte';
 	import { tick } from 'svelte';
 
+	interface UserMessage {
+		readonly message: string;
+		readonly username: string;
+		readonly receivedAt: string;
+	}
+
 	let message = $state('');
-	const messages: string[] = $derived(messageService.messages);
+	const messages: UserMessage[] = $derived(messageService.messages.map((elem) => JSON.parse(elem)));
 
 	const sendMessage = () => {
 		messageService.sendMessage(message);
@@ -52,7 +58,9 @@
 		<div class="chatbox-outer" bind:this={div}>
 			<div class="chatbox-inner">
 				{#each messages.toReversed() as msg}
-					<div class="message">{msg}</div>
+					<div class="message">
+						User: {msg.username} time: {msg.receivedAt} Message: {msg.message}
+					</div>
 				{/each}
 			</div>
 		</div>
