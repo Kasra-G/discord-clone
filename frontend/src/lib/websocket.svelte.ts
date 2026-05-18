@@ -47,7 +47,18 @@ class MessageService {
 	sendMessage(message: string) {
 		this.ws?.send(
 			JSON.stringify({
-				message: message
+				message: message,
+				command: 'BROADCAST_MESSAGE'
+			})
+		);
+	}
+
+	sendPrivateMessage(message: string, recipient: string) {
+		this.ws?.send(
+			JSON.stringify({
+				message: message,
+				recipient: recipient,
+				command: 'PRIVATE_MESSAGE'
 			})
 		);
 	}
