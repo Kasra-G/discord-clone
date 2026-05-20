@@ -59,7 +59,20 @@
 			<div class="chatbox-inner">
 				{#each messages.toReversed() as msg}
 					<div class="message">
-						User: {msg.sender} time: {msg.timestamp} Message: {msg.message}
+						<div class="message-header">
+							<div class="message-username">
+								{msg.sender}
+							</div>
+							<div class="message-timestamp">
+								{new Date(msg.timestamp).toLocaleString([], {
+									dateStyle: 'short',
+									timeStyle: 'short'
+								})}
+							</div>
+						</div>
+						<div>
+							{msg.message}
+						</div>
 					</div>
 				{/each}
 			</div>
@@ -110,5 +123,21 @@
 		padding: 10px;
 		color: white;
 		background-color: gray;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+	}
+
+	.message-header {
+		display: flex;
+		gap: 20px;
+	}
+
+	.message-username {
+		font-size: medium;
+	}
+
+	.message-timestamp {
+		font-size: small;
 	}
 </style>
