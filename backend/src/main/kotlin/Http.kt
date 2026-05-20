@@ -9,7 +9,8 @@ fun Application.configureHttp() {
   install(CORS) {
     anyMethod()
     allowHost(
-        System.getenv("DOMAIN") ?: "*"
+        host = getEnv("DOMAIN") ?: "*",
+        schemes = listOf("http", "https"),
     ) // @TODO: Don't do this in production if possible. Try to limit it.
   }
 }
