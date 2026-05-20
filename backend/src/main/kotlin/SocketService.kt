@@ -23,19 +23,19 @@ object SocketService {
   private val sessionMap = mutableMapOf<Username, WebSocketServerSession>()
 
   suspend fun acceptConnection(session: WebSocketServerSession) {
-    val user = getNewUser()
-    session.application.log.info("connected $user")
+    val username = getNewUsername()
+    session.application.log.info("connected $username")
     sendChannelMessage(
         sender = Username.SYSTEM,
-        message = "${user.username} has joined the chat room",
+        message = "${username.value} has joined the chat room",
     )
-    sessionMap[user] = session
+    sessionMap[username] = session
     sendChannelMessageToRecipient(
         sender = Username.SYSTEM,
-        recipient = user,
-        message = "Welcome ${user.username}, you have connected to the chat room",
+        recipient = username,
+        message = "Welcome ${username.value}, you have connected to the chat room",
     )
-    runCatching { handleIncomingUserFrames(session, user) }
+    runCatching { handleIncomingUserFrames(session, username) }
         .onFailure { exception ->
           session.application.log.error(
               "WebSocket exception: ${exception.localizedMessage}",
@@ -44,8 +44,8 @@ object SocketService {
         }
         .also {
           sendChannelMessage(
-              sender = user,
-              message = "${user.username} has left the chat room",
+              sender = username,
+              message = "${username.value} has left the chat room",
           )
         }
   }
@@ -88,21 +88,21 @@ object SocketService {
     receiverSession.sendSerialized<ClientCommand>(commandToSend)
   }
 
-  private fun getNewUser() = Username.create("User-${userCounter.fetchAndIncrement()}")
+  private fun getNewUsername() = Username.create("User-${userCounter.fetchAndIncrement()}")
 }
 
 @Serializable
 @JvmInline
-value class Username private constructor(val username: String) {
+value class Username private constructor(val value: String) {
   init {
-    require(username.isNotEmpty())
+    require(value.isNotEmpty())
   }
 
   companion object {
     val SYSTEM = Username("SYSTEM")
 
     fun create(username: String): Username {
-      require(username != SYSTEM.username) { "Cannot use reserved username ${SYSTEM.username}" }
+      require(username != SYSTEM.value) { "Cannot use reserved username ${SYSTEM.value}" }
       return Username(username)
     }
   }
