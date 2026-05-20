@@ -21,6 +21,8 @@
 
 	let isChatOverflowing = $derived.by(() => {
 		if (!div) return false;
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		messages.length;
 
 		return div.scrollHeight > div.clientHeight;
@@ -40,6 +42,7 @@
 	$effect.pre(() => {
 		if (!div) return;
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		messages.length;
 
 		if (div.scrollHeight - div.scrollTop - div.clientHeight < 1) {
@@ -57,7 +60,7 @@
 	<div class="messages-container">
 		<div class="chatbox-outer" bind:this={div}>
 			<div class="chatbox-inner">
-				{#each messages.toReversed() as msg}
+				{#each messages.toReversed() as msg (msg.timestamp)}
 					<div class="message">
 						<div class="message-header">
 							<div class="message-username">

@@ -1,4 +1,4 @@
-export function handleError({ error, event }) {
+export function handleError({ error }) {
 	console.error(error);
 
 	return {
