@@ -5,8 +5,9 @@ ktor:
     port: 8080
   application:
     modules:
-      - com.example.com.HttpKt.configureHttp
-      - com.example.com.SerializationKt.configureSerialization
-      - com.example.com.WebsocketsKt.configureWebsockets
-      - com.example.com.RoutingKt.configureRouting
-      - com.example.com.CallLoggingKt.configureCallLogging
+      - com.ghkasra.discordclone.CallLoggingKt.configureCallLogging
+      - com.ghkasra.discordclone.ExposedKt.configureExposed
+      - com.ghkasra.discordclone.HttpKt.configureHttp
+      - com.ghkasra.discordclone.SerializationKt.configureSerialization
+      - com.ghkasra.discordclone.WebsocketsKt.configureWebsockets
+      - com.ghkasra.discordclone.RoutingKt.configureRouting

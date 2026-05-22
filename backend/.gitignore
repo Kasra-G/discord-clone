@@ -4,3 +4,4 @@ build/
 kls_database.db
 .idea/
 .kotlin/
+*.db

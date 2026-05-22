@@ -1,4 +1,4 @@
-package com.example.com
+package com.ghkasra.discordclone
 
 import kotlin.time.Clock
 import kotlin.time.Instant

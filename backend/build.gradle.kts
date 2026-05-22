@@ -1,11 +1,11 @@
 plugins {
   alias(libs.plugins.kotlin.jvm)
-  kotlin("plugin.serialization") version "2.3.20"
   alias(ktorLibs.plugins.ktor)
+  alias(libs.plugins.kotlin.serialization)
   id("com.ncorti.ktfmt.gradle") version "0.26.0"
 }
 
-group = "com.example.com"
+group = "com.ghkasra.discordclone"
 
 version = "1.0.0-SNAPSHOT"
 
@@ -23,9 +23,15 @@ dependencies {
   implementation(ktorLibs.server.websockets)
   implementation(libs.logback.classic)
   implementation(ktorLibs.server.callLogging)
+  implementation(libs.exposed.core)
+  implementation(libs.exposed.dao)
+  implementation(libs.exposed.jdbc)
+  implementation(libs.exposed.kotlin.datetime)
+  //  implementation(libs.exposed.migration.core)
+  //  implementation(libs.exposed.migration.jdbc)
 
   implementation("io.github.cdimascio:dotenv-kotlin:6.5.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+  implementation("org.xerial:sqlite-jdbc:3.53.1.0")
 
   testImplementation(kotlin("test"))
   testImplementation(ktorLibs.server.testHost)

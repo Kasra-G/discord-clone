@@ -1,4 +1,4 @@
-package com.example.com
+package com.ghkasra.discordclone
 
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*

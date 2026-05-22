@@ -1,4 +1,4 @@
-package com.example.com
+package com.ghkasra.discordclone
 
 import io.ktor.serialization.deserialize
 import io.ktor.server.application.log
@@ -13,6 +13,7 @@ import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
@@ -81,7 +82,7 @@ object SocketService {
       sender: Username,
       recipient: Username,
       message: String,
-  ) = supervisorScope {
+  ) = coroutineScope {
     val commandToSend = ClientCommand.NewMessage(message = message, sender = sender)
     val receiverSession = sessionMap[recipient]
     checkNotNull(receiverSession) { "Recipient $recipient not found" }

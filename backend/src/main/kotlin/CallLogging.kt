@@ -1,4 +1,4 @@
-package com.example.com
+package com.ghkasra.discordclone
 
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
