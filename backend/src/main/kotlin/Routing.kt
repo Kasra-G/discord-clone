@@ -9,7 +9,7 @@ import io.ktor.server.websocket.*
 import org.jetbrains.exposed.v1.jdbc.Database
 
 fun Application.configureRouting() {
-  val db = Database.connect("jdbc:sqlite:chat.db")
+  val db = Database.connect(getEnvOrThrow("DATABASE_URL"))
   val repo = MessageRepository(db)
   val socketService = SocketService(repo)
   routing {
