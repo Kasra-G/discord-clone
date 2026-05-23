@@ -49,7 +49,7 @@ class SocketService(val messageRepository: MessageRepository) {
         }
         .also {
           sendChannelMessage(
-              sender = username,
+              sender = Username.SYSTEM,
               message = "${username.value} has left the chat room",
           )
         }
