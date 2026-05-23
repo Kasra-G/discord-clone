@@ -6,7 +6,6 @@ ktor:
   application:
     modules:
       - com.ghkasra.discordclone.CallLoggingKt.configureCallLogging
-      - com.ghkasra.discordclone.ExposedKt.configureExposed
       - com.ghkasra.discordclone.HttpKt.configureHttp
       - com.ghkasra.discordclone.SerializationKt.configureSerialization
       - com.ghkasra.discordclone.WebsocketsKt.configureWebsockets

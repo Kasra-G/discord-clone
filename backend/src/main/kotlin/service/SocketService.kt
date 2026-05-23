@@ -1,5 +1,9 @@
-package com.ghkasra.discordclone
+package com.ghkasra.discordclone.service
 
+import com.ghkasra.discordclone.model.ChannelId
+import com.ghkasra.discordclone.model.ClientCommand
+import com.ghkasra.discordclone.model.SaveMessageRequest
+import com.ghkasra.discordclone.model.ServerCommand
 import io.ktor.serialization.deserialize
 import io.ktor.server.application.log
 import io.ktor.server.websocket.WebSocketServerSession
@@ -19,7 +23,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
 
 @OptIn(ExperimentalAtomicApi::class)
-object SocketService {
+class SocketService(val messageRepository: MessageRepository) {
   private val userCounter = AtomicInt(0)
   private val sessionMap = mutableMapOf<Username, WebSocketServerSession>()
 
@@ -55,20 +59,34 @@ object SocketService {
       session: WebSocketServerSession,
       username: Username,
   ) {
+    val log = session.application.log
     val converter = requireNotNull(session.converter)
     session.incoming.consumeEach { frame ->
       if (frame !is Frame.Text) return@consumeEach
 
-      session.application.log.info(frame.readText())
+      log.info(frame.readText())
       when (val incomingCommand = converter.deserialize<ServerCommand>(frame)) {
-        is ServerCommand.BroadcastMessage ->
-            sendChannelMessage(sender = username, message = incomingCommand.message)
-        is ServerCommand.PrivateMessage ->
-            sendChannelMessageToRecipient(
-                sender = username,
-                Username.create(incomingCommand.recipient),
-                incomingCommand.message,
-            )
+        is ServerCommand.BroadcastMessage -> {
+          val content = incomingCommand.message
+          log.info("Saving message $content from user $username")
+          val saved =
+              messageRepository.save(
+                  SaveMessageRequest(
+                      channelId = ChannelId.DEFAULT,
+                      content = content,
+                      sentBy = username,
+                  )
+              )
+          log.info("Saved message $saved")
+          sendChannelMessage(sender = username, message = content)
+        }
+        is ServerCommand.PrivateMessage -> {
+          sendChannelMessageToRecipient(
+              sender = username,
+              Username(incomingCommand.recipient),
+              incomingCommand.message,
+          )
+        }
       }
     }
   }
@@ -89,22 +107,14 @@ object SocketService {
     receiverSession.sendSerialized<ClientCommand>(commandToSend)
   }
 
-  private fun getNewUsername() = Username.create("User-${userCounter.fetchAndIncrement()}")
+  private fun getNewUsername() = Username("User-${userCounter.fetchAndIncrement()}")
 }
 
 @Serializable
 @JvmInline
-value class Username private constructor(val value: String) {
-  init {
-    require(value.isNotEmpty())
-  }
+value class Username(val value: String) {
 
   companion object {
     val SYSTEM = Username("SYSTEM")
-
-    fun create(username: String): Username {
-      require(username != SYSTEM.value) { "Cannot use reserved username ${SYSTEM.value}" }
-      return Username(username)
-    }
   }
 }
