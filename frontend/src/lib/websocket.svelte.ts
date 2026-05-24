@@ -5,7 +5,6 @@ const INITIAL_DELAY_MS = 100;
 
 export class WebsocketService {
 	private ws?: WebSocket;
-	private _messages = $state<any[]>([]);
 	private _status = $state<'DISCONNECTED' | 'RECONNECTING' | 'CONNECTING' | 'CONNECTED'>(
 		'DISCONNECTED'
 	);
@@ -14,10 +13,6 @@ export class WebsocketService {
 
 	public get status() {
 		return this._status;
-	}
-
-	public get messages() {
-		return this._messages;
 	}
 
 	private subscribers: ((message: string) => void)[] = [];
@@ -32,12 +27,10 @@ export class WebsocketService {
 
 		this.ws.addEventListener('open', () => {
 			this._status = 'CONNECTED';
-			this._messages = [];
 			this.resetReconnectSettings();
 		});
 
 		this.ws.addEventListener('message', (messageEvent) => {
-			this._messages.push(messageEvent.data);
 			this.subscribers.forEach((handle) => handle(JSON.parse(messageEvent.data)));
 		});
 
