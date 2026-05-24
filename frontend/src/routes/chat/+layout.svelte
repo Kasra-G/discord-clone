@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { messageService } from '$lib/websocket.svelte';
+	import { commandService } from '$lib/command-service.svelte';
+	import { websocketService } from '$lib/websocket.svelte';
 
 	$effect(() => {
-		messageService.connect();
+		websocketService.connect();
+		commandService.loadMessages();
 	});
 
 	let { children } = $props();

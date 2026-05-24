@@ -2,9 +2,10 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 const MAX_DELAY_MS = 10000;
 const INITIAL_DELAY_MS = 100;
-class MessageService {
+
+export class WebsocketService {
 	private ws?: WebSocket;
-	private _messages = $state<string[]>([]);
+	private _messages = $state<any[]>([]);
 	private _status = $state<'DISCONNECTED' | 'RECONNECTING' | 'CONNECTING' | 'CONNECTED'>(
 		'DISCONNECTED'
 	);
@@ -19,7 +20,7 @@ class MessageService {
 		return this._messages;
 	}
 
-	constructor() {}
+	private subscribers: ((message: string) => void)[] = [];
 
 	connect() {
 		if (this.ws) {
@@ -37,6 +38,7 @@ class MessageService {
 
 		this.ws.addEventListener('message', (messageEvent) => {
 			this._messages.push(messageEvent.data);
+			this.subscribers.forEach((handle) => handle(JSON.parse(messageEvent.data)));
 		});
 
 		this.ws.addEventListener('close', () => {
@@ -44,13 +46,12 @@ class MessageService {
 		});
 	}
 
-	sendMessage(message: string) {
-		this.ws?.send(
-			JSON.stringify({
-				message: message,
-				command: 'BROADCAST_MESSAGE'
-			})
-		);
+	send(payload: object) {
+		this.ws?.send(JSON.stringify(payload));
+	}
+
+	onMessage(handle: (message: any) => void) {
+		this.subscribers.push(handle);
 	}
 
 	sendPrivateMessage(message: string, recipient: string) {
@@ -77,4 +78,4 @@ class MessageService {
 	}
 }
 
-export const messageService = new MessageService();
+export const websocketService = new WebsocketService();

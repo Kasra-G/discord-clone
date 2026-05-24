@@ -17,7 +17,6 @@ import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.fetchAndIncrement
 import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
@@ -29,18 +28,19 @@ class SocketService(val messageRepository: MessageRepository) {
 
   suspend fun acceptConnection(session: WebSocketServerSession) {
     val username = getNewUsername()
+    // todo: replace the system messages with status indicator commands
     session.application.log.info("connected $username")
-    sendChannelMessage(
-        sender = Username.SYSTEM,
-        message = "${username.value} has joined the chat room",
-    )
+    //    session.sendChannelMessage(
+    //        sender = Username.SYSTEM,
+    //        message = "${username.value} has joined the chat room",
+    //    )
     sessionMap[username] = session
-    sendChannelMessageToRecipient(
-        sender = Username.SYSTEM,
-        recipient = username,
-        message = "Welcome ${username.value}, you have connected to the chat room",
-    )
-    runCatching { handleIncomingUserFrames(session, username) }
+    //    sendChannelMessageToRecipient(
+    //        sender = Username.SYSTEM,
+    //        recipient = username,
+    //        message = "Welcome ${username.value}, you have connected to the chat room",
+    //    )
+    runCatching { session.handleIncomingUserFrames(username) }
         .onFailure { exception ->
           session.application.log.error(
               "WebSocket exception: ${exception.localizedMessage}",
@@ -48,64 +48,58 @@ class SocketService(val messageRepository: MessageRepository) {
           )
         }
         .also {
-          sendChannelMessage(
-              sender = Username.SYSTEM,
-              message = "${username.value} has left the chat room",
-          )
+          //          session.sendChannelMessage(
+          //              sender = Username.SYSTEM,
+          //              message = "${username.value} has left the chat room",
+          //          )
         }
   }
 
-  private suspend fun handleIncomingUserFrames(
-      session: WebSocketServerSession,
+  private suspend fun WebSocketServerSession.handleIncomingUserFrames(
       username: Username,
   ) {
-    val log = session.application.log
-    val converter = requireNotNull(session.converter)
-    session.incoming.consumeEach { frame ->
+    val log = application.log
+    val converter = requireNotNull(converter)
+    incoming.consumeEach { frame ->
       if (frame !is Frame.Text) return@consumeEach
 
       log.info(frame.readText())
       when (val incomingCommand = converter.deserialize<ServerCommand>(frame)) {
         is ServerCommand.BroadcastMessage -> {
-          val content = incomingCommand.message
-          log.info("Saving message $content from user $username")
-          val saved =
-              messageRepository.save(
-                  SaveMessageRequest(
-                      channelId = ChannelId.DEFAULT,
-                      content = content,
-                      sentBy = username,
-                  )
-              )
-          log.info("Saved message $saved")
-          sendChannelMessage(sender = username, message = content)
+          sendChannelMessage(sender = username, message = incomingCommand.message)
         }
         is ServerCommand.PrivateMessage -> {
-          sendChannelMessageToRecipient(
-              sender = username,
-              Username(incomingCommand.recipient),
-              incomingCommand.message,
-          )
+          log.info("Unsupported command")
         }
       }
     }
   }
 
-  private suspend fun sendChannelMessage(sender: Username, message: String) = supervisorScope {
-    val commandToSend = ClientCommand.NewMessage(message = message, sender = sender)
-    sessionMap.values.forEach { launch { it.sendSerialized<ClientCommand>(commandToSend) } }
-  }
+  private suspend fun WebSocketServerSession.sendChannelMessage(sender: Username, message: String) =
+      supervisorScope {
+        val saved =
+            messageRepository.save(
+                SaveMessageRequest(
+                    channelId = ChannelId.DEFAULT,
+                    content = message,
+                    sentBy = sender,
+                )
+            )
+        application.log.info("Saved message $saved")
+        val commandToSend = ClientCommand.NewMessage(payload = saved)
+        sessionMap.values.forEach { launch { it.sendSerialized(commandToSend) } }
+      }
 
-  private suspend fun sendChannelMessageToRecipient(
-      sender: Username,
-      recipient: Username,
-      message: String,
-  ) = coroutineScope {
-    val commandToSend = ClientCommand.NewMessage(message = message, sender = sender)
-    val receiverSession = sessionMap[recipient]
-    checkNotNull(receiverSession) { "Recipient $recipient not found" }
-    receiverSession.sendSerialized<ClientCommand>(commandToSend)
-  }
+  //  private suspend fun sendChannelMessageToRecipient(
+  //      sender: Username,
+  //      recipient: Username,
+  //      message: String,
+  //  ) = coroutineScope {
+  //    val commandToSend = ClientCommand.NewMessage(payload = Message())
+  //    val receiverSession = sessionMap[recipient]
+  //    checkNotNull(receiverSession) { "Recipient $recipient not found" }
+  //    receiverSession.sendSerialized(commandToSend)
+  //  }
 
   private fun getNewUsername() = Username("User-${userCounter.fetchAndIncrement()}")
 }

@@ -1,19 +1,14 @@
 <script lang="ts">
 	import { getMotd } from '$lib/backend.remote';
-	import { messageService } from '$lib/websocket.svelte';
+	import { commandService } from '$lib/command-service.svelte';
+	import { websocketService } from '$lib/websocket.svelte';
 	import { tick } from 'svelte';
 
-	interface UserMessage {
-		readonly message: string;
-		readonly sender: string;
-		readonly timestamp: string;
-	}
-
 	let message = $state('');
-	const messages: UserMessage[] = $derived(messageService.messages.map((elem) => JSON.parse(elem)));
+	const messages = $derived(commandService.messages);
 
 	const sendMessage = () => {
-		messageService.sendMessage(message);
+		commandService.newMessage(message);
 		message = '';
 	};
 
@@ -55,26 +50,26 @@
 
 <div class="wrapper">
 	<h3>Message of the Day: {await getMotd()}</h3>
-	<h3>Server status: {messageService.status}</h3>
+	<h3>Server status: {websocketService.status}</h3>
 
 	<div class="messages-container">
 		<div class="chatbox-outer" bind:this={div}>
 			<div class="chatbox-inner">
-				{#each messages.toReversed() as msg (msg.timestamp)}
+				{#each messages.toReversed() as msg (msg.createdAt)}
 					<div class="message">
 						<div class="message-header">
 							<div class="message-username">
-								{msg.sender}
+								{msg.sentBy}
 							</div>
 							<div class="message-timestamp">
-								{new Date(msg.timestamp).toLocaleString([], {
+								{new Date(msg.createdAt).toLocaleString([], {
 									dateStyle: 'short',
 									timeStyle: 'short'
 								})}
 							</div>
 						</div>
 						<div>
-							{msg.message}
+							{msg.content}
 						</div>
 					</div>
 				{/each}

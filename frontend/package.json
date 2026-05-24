@@ -37,5 +37,8 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"zod": "^4.4.3"
+	}
 }

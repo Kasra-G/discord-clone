@@ -1,6 +1,5 @@
 package com.ghkasra.discordclone.model
 
-import com.ghkasra.discordclone.service.Username
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -22,13 +21,12 @@ sealed class ServerCommand {
   data class PrivateMessage(val message: String, val recipient: String) : ServerCommand() {}
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-@JsonClassDiscriminator("command")
-sealed class ClientCommand {
-  val timestamp: Instant = Clock.System.now()
+sealed class ClientCommand<out T>(@Serializable val command: String) {
+  @Serializable val timestamp: Instant = Clock.System.now()
+  @Serializable abstract val payload: T
 
   @Serializable
-  @SerialName("NEW_MESSAGE")
-  data class NewMessage(val message: String, val sender: Username) : ClientCommand() {}
+  data class NewMessage(override val payload: Message) :
+      ClientCommand<Message>(command = "NEW_MESSAGE") {}
 }
