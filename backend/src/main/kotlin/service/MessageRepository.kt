@@ -35,7 +35,7 @@ class MessageRepository(val db: Database) {
     val sentBy = text("sent_by")
 
     init {
-      uniqueIndex(id, channelId)
+      uniqueIndex(channelId, id)
     }
   }
 
