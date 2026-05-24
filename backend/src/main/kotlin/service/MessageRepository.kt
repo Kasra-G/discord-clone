@@ -11,7 +11,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -20,28 +20,28 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
+open class UuidV7Table(name: String = "", columnName: String = "id") : IdTable<Uuid>(name) {
+  final override val id = uuid(columnName).clientDefault { Uuid.generateV7() }.entityId()
+  final override val primaryKey = PrimaryKey(id)
+}
+
 class MessageRepository(val db: Database) {
 
   init {
     transaction(db) { SchemaUtils.create(Messages) }
   }
 
-  private object Messages : Table("messages") {
-    val id = uuid("id")
+  private object Messages : UuidV7Table("messages") {
     val channelId = text("channel_id")
     val content = text("content")
-    val createdAt = timestamp("created_at")
-    val updatedAt = timestamp("updated_at")
+    val createdAt = timestamp("created_at").clientDefault { Clock.System.now() }
+    val updatedAt = timestamp("updated_at").clientDefault { Clock.System.now() }
     val sentBy = text("sent_by")
-
-    init {
-      uniqueIndex(channelId, id)
-    }
   }
 
   private fun ResultRow.toMessage() =
       Message(
-          id = MessageId(this[Messages.id]),
+          id = MessageId(this[Messages.id].value),
           createdAt = this[Messages.createdAt],
           updatedAt = this[Messages.updatedAt],
           content = this[Messages.content],
@@ -62,9 +62,6 @@ class MessageRepository(val db: Database) {
   fun save(request: SaveMessageRequest): Message =
       transaction(db) {
         Messages.insert {
-              it[id] = Uuid.generateV7()
-              it[createdAt] = Clock.System.now()
-              it[updatedAt] = Clock.System.now()
               it[content] = request.content
               it[sentBy] = request.sentBy.value
               it[channelId] = request.channelId.value
