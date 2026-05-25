@@ -8,10 +8,9 @@ import com.ghkasra.discordclone.model.MessageId
 import com.ghkasra.discordclone.model.SaveMessageRequest
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -20,18 +19,13 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-open class UuidV7Table(name: String = "", columnName: String = "id") : IdTable<Uuid>(name) {
-  final override val id = uuid(columnName).clientDefault { Uuid.generateV7() }.entityId()
-  final override val primaryKey = PrimaryKey(id)
-}
-
 class MessageRepository(val db: Database) {
 
   init {
     transaction(db) { SchemaUtils.create(Messages) }
   }
 
-  private object Messages : UuidV7Table("messages") {
+  private object Messages : UuidTable("messages", uuidVersion = UuidVersion.V7) {
     val channelId = text("channel_id")
     val content = text("content")
     val createdAt = timestamp("created_at").clientDefault { Clock.System.now() }
