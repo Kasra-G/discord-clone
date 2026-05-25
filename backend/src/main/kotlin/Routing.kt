@@ -11,6 +11,7 @@ import io.ktor.server.websocket.*
 import org.jetbrains.exposed.v1.jdbc.Database
 
 fun Application.configureRouting() {
+  install(IgnoreTrailingSlash)
   val db = Database.connect(getEnvOrThrow("DATABASE_URL"))
   val repo = MessageRepository(db)
   val socketService = SocketService(repo)
