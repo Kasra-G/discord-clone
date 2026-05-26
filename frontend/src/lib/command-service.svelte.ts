@@ -7,6 +7,12 @@ class CommandService {
 		websocketService.onMessage((msg) => {
 			if (msg.command === 'NEW_MESSAGE') this.messages.push(msg.payload);
 		});
+
+		websocketService.onOpen(() => {
+			websocketService.send({
+				username: 'Username-1'
+			});
+		});
 	}
 
 	async loadMessages() {

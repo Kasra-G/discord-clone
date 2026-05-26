@@ -3,6 +3,14 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 const MAX_DELAY_MS = 10000;
 const INITIAL_DELAY_MS = 100;
 
+type MessageHandler = (message: any) => void;
+type OpenHandler = () => void;
+
+interface SubscriberMap {
+	onMessage: MessageHandler[];
+	onOpen: OpenHandler[];
+}
+
 export class WebsocketService {
 	private ws?: WebSocket;
 	private _status = $state<'DISCONNECTED' | 'RECONNECTING' | 'CONNECTING' | 'CONNECTED'>(
@@ -15,7 +23,10 @@ export class WebsocketService {
 		return this._status;
 	}
 
-	private subscribers: ((message: string) => void)[] = [];
+	private subscribers: SubscriberMap = {
+		onMessage: [],
+		onOpen: []
+	};
 
 	connect() {
 		if (this.ws) {
@@ -28,10 +39,11 @@ export class WebsocketService {
 		this.ws.addEventListener('open', () => {
 			this._status = 'CONNECTED';
 			this.resetReconnectSettings();
+			this.subscribers.onOpen.forEach((handle) => handle());
 		});
 
 		this.ws.addEventListener('message', (messageEvent) => {
-			this.subscribers.forEach((handle) => handle(JSON.parse(messageEvent.data)));
+			this.subscribers.onMessage.forEach((handle) => handle(JSON.parse(messageEvent.data)));
 		});
 
 		this.ws.addEventListener('close', () => {
@@ -43,8 +55,12 @@ export class WebsocketService {
 		this.ws?.send(JSON.stringify(payload));
 	}
 
-	onMessage(handle: (message: any) => void) {
-		this.subscribers.push(handle);
+	onMessage(handle: MessageHandler) {
+		this.subscribers.onMessage.push(handle);
+	}
+
+	onOpen(handle: OpenHandler) {
+		this.subscribers.onOpen.push(handle);
 	}
 
 	sendPrivateMessage(message: string, recipient: string) {

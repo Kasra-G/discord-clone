@@ -13,34 +13,52 @@ import io.ktor.server.websocket.sendSerialized
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlin.collections.set
-import kotlin.concurrent.atomics.AtomicInt
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.concurrent.atomics.fetchAndIncrement
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
 
-@OptIn(ExperimentalAtomicApi::class)
+@Serializable data class WebsocketClientInitiation(val username: Username)
+
 class SocketService(val messageRepository: MessageRepository) {
-  private val userCounter = AtomicInt(0)
   private val sessionMap = mutableMapOf<Username, WebSocketServerSession>()
 
+  suspend fun WebSocketServerSession.ignoreUntilAuthorized(): WebsocketClientInitiation {
+    val converter = checkNotNull(converter)
+
+    for (frame in incoming) {
+      if (frame is Frame.Text) {
+        val init =
+            try {
+              converter.deserialize<WebsocketClientInitiation>(frame)
+            } catch (_: IllegalArgumentException) {
+              continue
+            }
+        val username = init.username
+        application.log.info("Authorized user $username")
+        return init
+      }
+    }
+    throw IllegalArgumentException("Connection closed before authenticating")
+  }
+
   suspend fun acceptConnection(session: WebSocketServerSession) {
-    val username = getNewUsername()
+    val init = session.ignoreUntilAuthorized()
+    val username = init.username
+    sessionMap[username] = session
     // todo: replace the system messages with status indicator commands
     session.application.log.info("connected $username")
     //    session.sendChannelMessage(
     //        sender = Username.SYSTEM,
     //        message = "${username.value} has joined the chat room",
     //    )
-    sessionMap[username] = session
     //    sendChannelMessageToRecipient(
     //        sender = Username.SYSTEM,
     //        recipient = username,
     //        message = "Welcome ${username.value}, you have connected to the chat room",
     //    )
-    runCatching { session.handleIncomingUserFrames(username) }
+    session
+        .runCatching { handleIncomingUserFrames(username) }
         .onFailure { exception ->
           session.application.log.error(
               "WebSocket exception: ${exception.localizedMessage}",
@@ -48,6 +66,7 @@ class SocketService(val messageRepository: MessageRepository) {
           )
         }
         .also {
+          sessionMap.remove(username)
           //          session.sendChannelMessage(
           //              sender = Username.SYSTEM,
           //              message = "${username.value} has left the chat room",
@@ -100,15 +119,6 @@ class SocketService(val messageRepository: MessageRepository) {
   //    checkNotNull(receiverSession) { "Recipient $recipient not found" }
   //    receiverSession.sendSerialized(commandToSend)
   //  }
-
-  private fun getNewUsername() = Username("User-${userCounter.fetchAndIncrement()}")
 }
 
-@Serializable
-@JvmInline
-value class Username(val value: String) {
-
-  companion object {
-    val SYSTEM = Username("SYSTEM")
-  }
-}
+@Serializable @JvmInline value class Username(val value: String)
