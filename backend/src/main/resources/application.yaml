@@ -10,3 +10,4 @@ ktor:
       - com.ghkasra.discordclone.SerializationKt.configureSerialization
       - com.ghkasra.discordclone.WebsocketsKt.configureWebsockets
       - com.ghkasra.discordclone.RoutingKt.configureRouting
+      - com.ghkasra.discordclone.RequestValidationKt.configureRequestValidation

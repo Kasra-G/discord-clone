@@ -21,6 +21,7 @@ dependencies {
   implementation(ktorLibs.server.netty)
   implementation(ktorLibs.serialization.kotlinx.json)
   implementation(ktorLibs.server.websockets)
+  implementation(ktorLibs.server.requestValidation)
   implementation(libs.logback.classic)
   implementation(ktorLibs.server.callLogging)
   implementation(libs.exposed.core)

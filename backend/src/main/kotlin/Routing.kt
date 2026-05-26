@@ -20,6 +20,8 @@ fun Application.configureRouting() {
     get("/channels/{channelId}/messages") {
       val channelId = ChannelId(call.requirePathParameter("channelId"))
       val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
+      require(count > -1) { "Count must be positive" }
+      require(count < 100) { "Count must be less than 100" }
       call.respond(repo.listMessages(channelId, count))
     }
     webSocket("/ws") { socketService.acceptConnection(this) }
