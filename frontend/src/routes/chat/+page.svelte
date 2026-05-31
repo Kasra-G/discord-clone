@@ -3,9 +3,12 @@
 	import { commandService } from '$lib/command-service.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
 
-	let inputText = $state('');
 	let inputField: HTMLElement;
 	const messages = $derived(commandService.messages);
+
+	let inputText = $state('');
+	let viewport = $state<HTMLDivElement>();
+	let autoscroll = $state(true);
 
 	const sendMessage = (e: SubmitEvent) => {
 		e.preventDefault();
@@ -13,10 +16,6 @@
 		inputField.focus();
 		inputText = '';
 	};
-
-	let viewport = $state<HTMLDivElement>();
-
-	let autoscroll = $state(true);
 
 	$effect(() => {
 		if (!viewport) return;
