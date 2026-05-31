@@ -5,10 +5,13 @@
 	import { tick } from 'svelte';
 
 	let message = $state('');
+  let inputField: HTMLElement
 	const messages = $derived(commandService.messages);
 
-	const sendMessage = () => {
+	const sendMessage = (e: SubmitEvent) => {
+    e.preventDefault()
 		commandService.newMessage(message);
+    inputField.focus()
 		message = '';
 	};
 
@@ -75,14 +78,15 @@
 				{/each}
 			</div>
 		</div>
-		<form>
+		<form onsubmit={sendMessage}>
 			<input
 				class="message-input"
 				type="text"
 				placeholder="Type a message..."
 				bind:value={message}
+        bind:this={inputField}
 			/>
-			<button type="submit" onclick={sendMessage}>Send message</button>
+			<button type="submit">Send message</button>
 		</form>
 	</div>
 </div>
