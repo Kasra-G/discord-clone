@@ -2,52 +2,28 @@
 	import { getMotd } from '$lib/backend.remote';
 	import { commandService } from '$lib/command-service.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
-	import { tick } from 'svelte';
 
-	let message = $state('');
-  let inputField: HTMLElement
+	let inputText = $state('');
+	let inputField: HTMLElement;
 	const messages = $derived(commandService.messages);
 
 	const sendMessage = (e: SubmitEvent) => {
-    e.preventDefault()
-		commandService.newMessage(message);
-    inputField.focus()
-		message = '';
+		e.preventDefault();
+		commandService.newMessage(inputText);
+		inputField.focus();
+		inputText = '';
 	};
 
-	let div: HTMLDivElement | undefined = $state();
+	let viewport = $state<HTMLDivElement>();
 
-	let isChatOverflowing = $derived.by(() => {
-		if (!div) return false;
+	let autoscroll = $state(true);
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		messages.length;
-
-		return div.scrollHeight > div.clientHeight;
-	});
-
-	// scroll on first overflow
-	$effect.pre(() => {
-		if (!div) return;
-		if (isChatOverflowing) {
-			tick().then(() => {
-				div!.scrollTo(0, div!.scrollHeight);
-			});
-		}
-	});
-
-	// scroll when bottom
-	$effect.pre(() => {
-		if (!div) return;
-
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		messages.length;
-
-		if (div.scrollHeight - div.scrollTop - div.clientHeight < 1) {
-			tick().then(() => {
-				div!.scrollTo(0, div!.scrollHeight);
-			});
-		}
+	$effect(() => {
+		if (!viewport) return;
+		if (messages.length <= 0) return;
+		if (!messages[messages.length - 1]) return;
+		if (!autoscroll) return;
+		viewport.scrollTo(0, viewport.scrollHeight);
 	});
 </script>
 
@@ -56,9 +32,16 @@
 	<h3>Server status: {websocketService.status}</h3>
 
 	<div class="messages-container">
-		<div class="chatbox-outer" bind:this={div}>
+		<div
+			class="chatbox-outer"
+			bind:this={viewport}
+			onscroll={() => {
+				if (!viewport) return;
+				autoscroll = viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 1;
+			}}
+		>
 			<div class="chatbox-inner">
-				{#each messages.toReversed() as msg (msg.createdAt)}
+				{#each messages.toReversed() as msg (msg.id)}
 					<div class="message">
 						<div class="message-header">
 							<div class="message-username">
@@ -83,8 +66,8 @@
 				class="message-input"
 				type="text"
 				placeholder="Type a message..."
-				bind:value={message}
-        bind:this={inputField}
+				bind:value={inputText}
+				bind:this={inputField}
 			/>
 			<button type="submit">Send message</button>
 		</form>
