@@ -31,11 +31,8 @@ class SocketService(val messageRepository: MessageRepository) {
     for (frame in incoming) {
       if (frame is Frame.Text) {
         val init =
-            try {
-              converter.deserialize<WebsocketClientInitiation>(frame)
-            } catch (_: IllegalArgumentException) {
-              continue
-            }
+            runCatching { converter.deserialize<WebsocketClientInitiation>(frame) }
+                .getOrElse { continue }
         val username = init.username
         application.log.info("Authorized user $username")
         return init
@@ -87,7 +84,13 @@ class SocketService(val messageRepository: MessageRepository) {
       if (frame !is Frame.Text) return@consumeEach
 
       log.info(frame.readText())
-      when (val incomingCommand = converter.deserialize<ServerCommand>(frame)) {
+      val incomingCommand =
+          runCatching { converter.deserialize<ServerCommand>(frame) }
+              .getOrElse {
+                log.error("Unknown server command ${frame.readText()}")
+                return@consumeEach
+              }
+      when (incomingCommand) {
         is ServerCommand.BroadcastMessage -> {
           sendChannelMessage(sender = username, message = incomingCommand.message)
         }
