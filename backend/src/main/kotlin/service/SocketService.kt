@@ -12,7 +12,8 @@ import io.ktor.server.websocket.converter
 import io.ktor.server.websocket.sendSerialized
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
-import kotlin.collections.set
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -21,9 +22,10 @@ import kotlinx.serialization.Serializable
 @Serializable data class WebsocketClientInitiation(val username: Username)
 
 class SocketService(val messageRepository: MessageRepository) {
-  private val sessionMap = mutableMapOf<Username, WebSocketServerSession>()
+  private val sessionMap =
+      ConcurrentHashMap<Username, CopyOnWriteArrayList<WebSocketServerSession>>()
 
-  suspend fun WebSocketServerSession.ignoreUntilAuthorized(): WebsocketClientInitiation {
+  suspend fun WebSocketServerSession.ignoreUntilAuthenticated(): WebsocketClientInitiation {
     val converter = checkNotNull(converter)
 
     for (frame in incoming) {
@@ -43,9 +45,9 @@ class SocketService(val messageRepository: MessageRepository) {
   }
 
   suspend fun acceptConnection(session: WebSocketServerSession) {
-    val init = session.ignoreUntilAuthorized()
+    val init = session.ignoreUntilAuthenticated()
     val username = init.username
-    sessionMap[username] = session
+    sessionMap.getOrPut(username) { CopyOnWriteArrayList() }.add(session)
     // todo: replace the system messages with status indicator commands
     session.application.log.info("connected $username")
     //    session.sendChannelMessage(
@@ -66,7 +68,9 @@ class SocketService(val messageRepository: MessageRepository) {
           )
         }
         .also {
-          sessionMap.remove(username)
+          val userSessionList = sessionMap[username]
+          checkNotNull(userSessionList)
+          userSessionList.remove(session)
           //          session.sendChannelMessage(
           //              sender = Username.SYSTEM,
           //              message = "${username.value} has left the chat room",
@@ -106,7 +110,9 @@ class SocketService(val messageRepository: MessageRepository) {
             )
         application.log.info("Saved message $saved")
         val commandToSend = ClientCommand.NewMessage(payload = saved)
-        sessionMap.values.forEach { launch { it.sendSerialized(commandToSend) } }
+        sessionMap.values.forEach { userSessions ->
+          userSessions.forEach { launch { it.sendSerialized(commandToSend) } }
+        }
       }
 
   //  private suspend fun sendChannelMessageToRecipient(
