@@ -54,7 +54,7 @@
 					<div class="message">
 						<div class="message-header">
 							<div class="message-username">
-								{msg.sentBy}
+								{msg.author.username}
 							</div>
 							<div class="message-timestamp">
 								{new Date(msg.createdAt).toLocaleString([], {

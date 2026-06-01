@@ -2,7 +2,8 @@
 
 package com.ghkasra.discordclone.model
 
-import com.ghkasra.discordclone.service.Username
+import com.ghkasra.discordclone.service.User
+import com.ghkasra.discordclone.service.UserId
 import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -21,14 +22,14 @@ value class ChannelId(val value: String) {
 data class SaveMessageRequest(
     val channelId: ChannelId = ChannelId.DEFAULT,
     val content: String,
-    val sentBy: Username,
+    val authorId: UserId,
 )
 
 @Serializable
 data class Message(
     val channelId: ChannelId,
     val content: String,
-    val sentBy: Username,
+    val author: User,
     val id: MessageId,
     val createdAt: Instant,
     val updatedAt: Instant,

@@ -10,7 +10,7 @@ class CommandService {
 
 		websocketService.onOpen(() => {
 			websocketService.send({
-				username: 'Username-1'
+				userId: '019e822b-5e70-75a4-8e7d-dc8cfc7e3983'
 			});
 		});
 	}

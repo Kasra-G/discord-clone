@@ -19,13 +19,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
 
-@Serializable data class WebsocketClientInitiation(val username: Username)
+@Serializable data class WebsocketClientInitiation(val userId: UserId)
 
-class SocketService(val messageRepository: MessageRepository) {
-  private val sessionMap =
-      ConcurrentHashMap<Username, CopyOnWriteArrayList<WebSocketServerSession>>()
+class SocketService(val messageRepository: MessageRepository, val userRepository: UserRepository) {
+  private val sessionMap = ConcurrentHashMap<UserId, CopyOnWriteArrayList<WebSocketServerSession>>()
 
-  suspend fun WebSocketServerSession.ignoreUntilAuthenticated(): WebsocketClientInitiation {
+  suspend fun WebSocketServerSession.ignoreUntilAuthenticated(): User {
     val converter = checkNotNull(converter)
 
     for (frame in incoming) {
@@ -33,18 +32,18 @@ class SocketService(val messageRepository: MessageRepository) {
         val init =
             runCatching { converter.deserialize<WebsocketClientInitiation>(frame) }
                 .getOrElse { continue }
-        val username = init.username
-        application.log.info("Authorized user $username")
-        return init
+        val userId = init.userId
+        application.log.info("Authorized user $userId")
+        return userRepository.get(GetUserRequest(userId))
       }
     }
     throw IllegalArgumentException("Connection closed before authenticating")
   }
 
   suspend fun acceptConnection(session: WebSocketServerSession) {
-    val init = session.ignoreUntilAuthenticated()
-    val username = init.username
-    sessionMap.getOrPut(username) { CopyOnWriteArrayList() }.add(session)
+    val user = session.ignoreUntilAuthenticated()
+    val username = user.username
+    sessionMap.getOrPut(user.id) { CopyOnWriteArrayList() }.add(session)
     // todo: replace the system messages with status indicator commands
     session.application.log.info("connected $username")
     //    session.sendChannelMessage(
@@ -57,7 +56,7 @@ class SocketService(val messageRepository: MessageRepository) {
     //        message = "Welcome ${username.value}, you have connected to the chat room",
     //    )
     session
-        .runCatching { handleIncomingUserFrames(username) }
+        .runCatching { handleIncomingUserFrames(user) }
         .onFailure { exception ->
           session.application.log.error(
               "WebSocket exception: ${exception.localizedMessage}",
@@ -65,7 +64,7 @@ class SocketService(val messageRepository: MessageRepository) {
           )
         }
         .also {
-          val userSessionList = sessionMap[username]
+          val userSessionList = sessionMap[user.id]
           checkNotNull(userSessionList)
           userSessionList.remove(session)
           //          session.sendChannelMessage(
@@ -76,7 +75,7 @@ class SocketService(val messageRepository: MessageRepository) {
   }
 
   private suspend fun WebSocketServerSession.handleIncomingUserFrames(
-      username: Username,
+      user: User,
   ) {
     val log = application.log
     val converter = requireNotNull(converter)
@@ -92,7 +91,7 @@ class SocketService(val messageRepository: MessageRepository) {
               }
       when (incomingCommand) {
         is ServerCommand.BroadcastMessage -> {
-          sendChannelMessage(sender = username, message = incomingCommand.message)
+          sendChannelMessage(author = user, message = incomingCommand.message)
         }
         is ServerCommand.PrivateMessage -> {
           log.info("Unsupported command")
@@ -101,14 +100,14 @@ class SocketService(val messageRepository: MessageRepository) {
     }
   }
 
-  private suspend fun WebSocketServerSession.sendChannelMessage(sender: Username, message: String) =
+  private suspend fun WebSocketServerSession.sendChannelMessage(author: User, message: String) =
       supervisorScope {
         val saved =
             messageRepository.save(
                 SaveMessageRequest(
                     channelId = ChannelId.DEFAULT,
                     content = message,
-                    sentBy = sender,
+                    authorId = author.id,
                 )
             )
         application.log.info("Saved message $saved")

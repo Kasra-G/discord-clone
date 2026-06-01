@@ -15,8 +15,17 @@ export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count
 	return (await response.json()) as Message[];
 });
 export const register = form(schemas.REGISTER, async (data) => {
-	const response = await getRequestEvent().fetch(`${PUBLIC_BACKEND_URL}/users/register`, {
-		body: JSON.stringify(data),
+	const event = getRequestEvent();
+
+	const response = await event.fetch(`${PUBLIC_BACKEND_URL}/users/register`, {
+		body: JSON.stringify({
+			username: data.username,
+			email: data.email,
+			password: data._password
+		}),
+		headers: {
+			'content-type': 'application/json'
+		},
 		method: 'POST'
 	});
 

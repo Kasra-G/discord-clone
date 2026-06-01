@@ -4,7 +4,15 @@ export interface Message {
 	readonly updatedAt: string;
 	readonly channelId: string;
 	readonly content: string;
-	readonly sentBy: string;
+	readonly author: User;
+}
+
+export interface User {
+	readonly id: string;
+	readonly createdAt: string;
+	readonly updatedAt: string;
+	readonly email: string;
+	readonly username: string;
 }
 
 export interface ClientCommand {
