@@ -12,8 +12,53 @@
 </html>
 
 <style>
+	:root {
+		/* Discord Primary Colors */
+		--blurple: #5865f2;
+		--dark-bg: #202225;
+		--chat-bg: #313338;
+		--darker-bg: #111214;
+
+		--header-primary: #f2f3f5;
+		--header-secondary: #b5bac1;
+		--text-normal: #dbdee1;
+		--text-muted: #949ba4;
+
+		--green: #23a55a;
+		--yellow: #f2b433;
+		--red: #da373c;
+
+		--background-primary: var(--dark-bg);
+		--background-secondary: var(--darker-bg);
+		--background-tertiary: var(--darker-bg);
+		--background-accent: var(--blurple);
+	}
+
 	body {
 		margin: 0;
 		padding: 0;
+		background-color: var(--background-primary);
+		color: var(--text-normal);
+		font-size: large;
+		font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+		font-weight: 400; /* Regular body weight */
+		text-rendering: optimizeLegibility;
+	}
+
+	input {
+		background-color: var(--background-tertiary);
+		border-color: var(--background-secondary);
+		border-radius: 5px;
+		border-width: 2px;
+		padding: 2px;
+		color: var(--text-normal);
+	}
+
+	button {
+		background-color: var(--background-accent);
+		border-color: var(--background-secondary);
+		border-radius: 7px;
+		border-width: 2px;
+		padding: 2px;
 	}
 </style>

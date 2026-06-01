@@ -70,7 +70,7 @@
 				{/each}
 			</div>
 		</div>
-		<form onsubmit={sendMessage}>
+		<form onsubmit={sendMessage} class="message-input-container">
 			<input
 				class="message-input"
 				type="text"
@@ -78,7 +78,6 @@
 				bind:value={inputText}
 				bind:this={inputField}
 			/>
-			<button type="submit">Send message</button>
 		</form>
 	</div>
 </div>
@@ -101,8 +100,7 @@
 	.chatbox-outer {
 		overflow-y: auto;
 		flex-grow: 1;
-		border: 2px solid black;
-		background-color: gray;
+		border-top: 1px solid var(--background-accent);
 	}
 
 	.chatbox-inner {
@@ -113,10 +111,11 @@
 
 	.message {
 		margin: 0px 5px 5px;
-		border: 1px solid black;
+		border: 1px solid var(--background-secondary);
+		border-radius: 10px;
 		padding: 10px;
-		color: white;
-		background-color: gray;
+		background-color: var(--background-primary);
+		color: var(--text-muted);
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
@@ -129,9 +128,25 @@
 
 	.message-username {
 		font-size: medium;
+		color: var(--text-normal);
 	}
 
 	.message-timestamp {
 		font-size: small;
+	}
+
+	.message-input-container {
+		display: flex;
+	}
+
+	.message-input {
+		flex-grow: 1;
+		padding: 15px;
+		border-radius: 10px;
+		margin: 10px;
+		font-size: medium;
+	}
+	.message-input:focus-visible {
+		outline: none;
 	}
 </style>
