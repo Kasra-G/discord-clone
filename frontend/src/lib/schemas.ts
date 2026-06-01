@@ -12,7 +12,7 @@ export const REGISTER = z
 			.nonempty('Please specify a username')
 			.min(3, 'Username must be at least length 3'),
 		email: z.email().nonempty('Please specify an email'),
-		password: z
+		_password: z
 			.string()
 			.min(8, { message: 'Password must be at least 8 characters long' })
 			.max(32, { message: 'Password cannot exceed 32 characters' })
@@ -20,14 +20,14 @@ export const REGISTER = z
 			.regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
 			.regex(/[0-9]/, { message: 'Password must contain at least one number' })
 			.regex(/[^A-Za-z0-9]/, { message: 'Password must contain at least one special character' }),
-		confirmPassword: z.string().nonempty('Please confirm the password')
+		_confirmPassword: z.string().nonempty('Please confirm the password')
 	})
-	.refine((data) => data.password === data.confirmPassword, {
+	.refine((data) => data._password === data._confirmPassword, {
 		error: 'Password does not match',
-		path: ['confirmPassword']
+		path: ['_confirmPassword']
 	});
 
 export const LOGIN = z.object({
 	username: z.string().nonempty('Please specify a username'),
-	password: z.string().nonempty('Please specify a password')
+	_password: z.string().nonempty('Please specify a password')
 });

@@ -17,8 +17,8 @@
 		{@render showErrors(login.fields.username)}
 	</div>
 	<div>
-		<label>Password <input {...login.fields.password.as('password')} /> </label>
-		{@render showErrors(login.fields.password)}
+		<label>Password <input {...login.fields._password.as('password')} /> </label>
+		{@render showErrors(login.fields._password)}
 	</div>
 	<div class="register-text">
 		Don't have an account? <a href="/register">Register</a>
@@ -32,6 +32,6 @@
 	}
 	.issue-text {
 		font-size: small;
-		color: red;
+		color: var(--red);
 	}
 </style>

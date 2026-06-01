@@ -21,12 +21,12 @@
 		{@render showErrors(register.fields.username)}
 	</div>
 	<div>
-		<label>Password <input {...register.fields.password.as('password')} /> </label>
-		{@render showErrors(register.fields.password)}
+		<label>Password <input {...register.fields._password.as('password')} /> </label>
+		{@render showErrors(register.fields._password)}
 	</div>
 	<div>
-		<label>Confirm Password <input {...register.fields.confirmPassword.as('password')} /> </label>
-		{@render showErrors(register.fields.confirmPassword)}
+		<label>Confirm Password <input {...register.fields._confirmPassword.as('password')} /> </label>
+		{@render showErrors(register.fields._confirmPassword)}
 	</div>
 	<div class="login-text">
 		Already have an account? <a href="/login">Login</a>
@@ -40,6 +40,6 @@
 	}
 	.issue-text {
 		font-size: small;
-		color: red;
+		color: var(--red);
 	}
 </style>
