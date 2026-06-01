@@ -38,4 +38,6 @@ dependencies {
   testImplementation(ktorLibs.server.testHost)
 }
 
+tasks.withType<JavaExec> { systemProperty("jansi.passthrough", "true") }
+
 tasks.register("format") { dependsOn("ktfmtFormat") }

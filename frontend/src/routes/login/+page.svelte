@@ -1,23 +1,37 @@
 <script lang="ts">
-	import { register } from '$lib/backend.remote';
+	import { login } from '$lib/backend.remote';
+	import * as schemas from '$lib/schemas';
+	import type { RemoteFormField, RemoteFormFieldValue } from '@sveltejs/kit';
 </script>
 
-<form {...register}>
-	<h3>Sign up</h3>
-	<div>
-		<label>Email <input {...register.fields.email.as('email')} /> </label>
-	</div>
-	<div>
-		<label>Username <input {...register.fields.username.as('text')} /> </label>
-	</div>
-	<div>
-		<label>Password <input {...register.fields.password.as('password')} /> </label>
-	</div>
-	{#each register.fields.allIssues() as issue}
-		<div>
-			{issue.path}
-			{issue.message}
-		</div>
+{#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
+	{#each field.issues() as issue}
+		<div class="issue-text">{issue.message}</div>
 	{/each}
-	<button>Sign up</button>
+{/snippet}
+
+<form {...login.preflight(schemas.LOGIN)} onchange={() => login.validate()}>
+	<h3>Login</h3>
+	<div>
+		<label>Username <input {...login.fields.username.as('text')} /> </label>
+		{@render showErrors(login.fields.username)}
+	</div>
+	<div>
+		<label>Password <input {...login.fields.password.as('password')} /> </label>
+		{@render showErrors(login.fields.password)}
+	</div>
+	<div class="register-text">
+		Don't have an account? <a href="/register">Register</a>
+	</div>
+	<button>Login</button>
 </form>
+
+<style>
+	.register-text {
+		font-size: small;
+	}
+	.issue-text {
+		font-size: small;
+		color: red;
+	}
+</style>

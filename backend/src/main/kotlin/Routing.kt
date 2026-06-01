@@ -18,6 +18,7 @@ fun Application.configureRouting() {
   val socketService = SocketService(repo)
   routing {
     post("/users/register") { call.respond(Response("OK")) }
+    post("/users/login") { call.respond(Response("OK")) }
     get("/") { call.respondText("Hello, World!") }
     get("/channels/{channelId}/messages") {
       val channelId = ChannelId(call.requirePathParameter("channelId"))
