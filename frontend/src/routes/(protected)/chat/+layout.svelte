@@ -3,8 +3,8 @@
 	import { websocketService } from '$lib/websocket.svelte';
 
 	$effect(() => {
-		websocketService.connect();
 		commandService.loadMessages();
+		websocketService.connect();
 	});
 
 	let { children } = $props();

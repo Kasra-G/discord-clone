@@ -1,10 +1,12 @@
 ---
+kind: Application
 ktor:
   development: true
   deployment:
     port: 8080
   application:
     modules:
+      - com.ghkasra.discordclone.SecurityKt.configureSecurity
       - com.ghkasra.discordclone.CallLoggingKt.configureCallLogging
       - com.ghkasra.discordclone.HttpKt.configureHttp
       - com.ghkasra.discordclone.SerializationKt.configureSerialization

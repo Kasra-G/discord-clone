@@ -1,3 +1,4 @@
+import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import z from 'zod';
 
 export const GET_MESSAGES = z.object({
@@ -31,3 +32,18 @@ export const LOGIN = z.object({
 	username: z.string().nonempty('Please specify a username'),
 	_password: z.string().nonempty('Please specify a password')
 });
+
+export const SEND_MESSAGE = z.object({
+	message: z.string().nonempty().max(1024),
+	channelId: z.string().default('default')
+});
+
+export interface UserDetails {
+	readonly id: string;
+	readonly username: string;
+	readonly createdAt: string;
+	readonly updatedAt: string;
+	readonly email: string;
+}
+
+export const BASE_API_URL = `${PUBLIC_BACKEND_URL}/api`;

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { getMotd } from '$lib/backend.remote';
+	import { goto } from '$app/navigation';
+	import { getMotd, sendMessage } from '$lib/backend.remote';
 	import { commandService } from '$lib/command-service.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
 
@@ -10,9 +11,13 @@
 	let viewport = $state<HTMLDivElement>();
 	let autoscroll = $state(true);
 
-	const sendMessage = (e: SubmitEvent) => {
+	const onSubmit = async (e: SubmitEvent) => {
 		e.preventDefault();
-		commandService.newMessage(inputText);
+		const { status } = await sendMessage({ message: inputText });
+		if (status === 401) {
+			goto('/login');
+		}
+
 		inputField.focus();
 		inputText = '';
 	};
@@ -70,7 +75,7 @@
 				{/each}
 			</div>
 		</div>
-		<form onsubmit={sendMessage} class="message-input-container">
+		<form onsubmit={onSubmit} class="message-input-container">
 			<input
 				class="message-input"
 				type="text"

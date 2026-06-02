@@ -7,12 +7,6 @@ class CommandService {
 		websocketService.onMessage((msg) => {
 			if (msg.command === 'NEW_MESSAGE') this.messages.push(msg.payload);
 		});
-
-		websocketService.onOpen(() => {
-			websocketService.send({
-				userId: '019e822b-5e70-75a4-8e7d-dc8cfc7e3983'
-			});
-		});
 	}
 
 	async loadMessages() {

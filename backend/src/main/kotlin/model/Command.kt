@@ -1,5 +1,6 @@
 package com.ghkasra.discordclone.model
 
+import com.ghkasra.discordclone.repository.Message
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.ExperimentalSerializationApi

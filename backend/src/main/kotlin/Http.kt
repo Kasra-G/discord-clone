@@ -8,9 +8,10 @@ fun Application.configureHttp() {
   install(CORS) {
     anyMethod()
     allowHeader(HttpHeaders.ContentType)
+    allowHeader(HttpHeaders.Authorization)
     allowNonSimpleContentTypes = true
     allowHost(
-        host = getEnv("DOMAIN") ?: "*",
+        host = Environment.DOMAIN,
         schemes = listOf("http", "https"),
     ) // @TODO: Don't do this in production if possible. Try to limit it.
   }

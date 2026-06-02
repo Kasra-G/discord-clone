@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { login } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
-	import type { RemoteFormField, RemoteFormFieldValue } from '@sveltejs/kit';
+	import { userStore } from '$lib/user.svelte';
+	import { type RemoteFormField, type RemoteFormFieldValue } from '@sveltejs/kit';
 </script>
 
 {#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
@@ -10,7 +13,18 @@
 	{/each}
 {/snippet}
 
-<form {...login.preflight(schemas.LOGIN)} onchange={() => login.validate()}>
+<form
+	{...login.preflight(schemas.LOGIN)}
+	{...login.enhance(async (form) => {
+		if (await form.submit()) {
+			form.element.reset();
+			userStore.current = login.result;
+			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/chat';
+			goto(redirectTo);
+		}
+	})}
+	onchange={() => login.validate()}
+>
 	<h3>Login</h3>
 	<div>
 		<label>Username <input {...login.fields.username.as('text')} /> </label>
@@ -25,6 +39,12 @@
 	</div>
 	<button>Login</button>
 </form>
+
+<button
+	onclick={async () => {
+		await userStore.clear();
+	}}>Logout</button
+>
 
 <style>
 	.register-text {
