@@ -22,8 +22,6 @@ export const logout = command(async () => {
 });
 
 export const sendMessage = command(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
-	checkAuthenticated();
-
 	const event = getRequestEvent();
 	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
 		method: 'POST',
