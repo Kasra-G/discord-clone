@@ -3,7 +3,7 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
 import type { Message, User } from './model';
 import * as schemas from './schemas';
-import { redirect } from '@sveltejs/kit';
+import { invalid, redirect } from '@sveltejs/kit';
 
 export const getMotd = query(async () => {
 	const response = await fetch(PUBLIC_BACKEND_URL);
@@ -53,7 +53,7 @@ export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count
 	return (await response.json()) as Message[];
 });
 
-export const register = form(schemas.REGISTER, async (data) => {
+export const register = form(schemas.REGISTER, async (data, issue) => {
 	checkAuthenticated();
 	const event = getRequestEvent();
 
@@ -66,6 +66,10 @@ export const register = form(schemas.REGISTER, async (data) => {
 		headers: { 'content-type': 'application/json' },
 		method: 'POST'
 	});
+
+	if (!response.ok) {
+		invalid(issue.username('username is not available'));
+	}
 
 	return await response.json();
 });
