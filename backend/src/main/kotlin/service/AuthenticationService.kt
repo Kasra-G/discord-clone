@@ -66,7 +66,8 @@ class AuthenticationService(
   }
 
   fun generateAccessToken(token: RefreshToken, deviceId: DeviceId): BearerTokens {
-    val tokenCredentials = refreshTokenRepository.findByTokenHash(hashRefreshToken(token))
+    val tokenCredentials =
+        refreshTokenRepository.findValidTokenByHash(hashRefreshToken(token), deviceId)
     requireNotNull(tokenCredentials) { "Refresh token does not exist" }
     return BearerTokens(
         token,

@@ -17,15 +17,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 			})
 		});
 
-		if (!res.ok) {
-			authenticated = false;
-		} else {
+		authenticated = res.ok;
+		if (res.ok) {
 			const cookies = parseSetCookie(res);
 			cookies.forEach((cookie) => {
 				const { name, value, ...options } = cookie;
 				event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
 			});
-			authenticated = true;
 		}
 	}
 	return await resolve(event);

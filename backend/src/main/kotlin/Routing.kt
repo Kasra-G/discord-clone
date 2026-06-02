@@ -119,7 +119,7 @@ fun Application.configureRouting() {
                   authorId = claims.userId,
               )
           launch { socketService.sendChannelMessage(message) }
-          call.respond(HttpStatusCode.OK)
+          call.respond(HttpStatusCode.Created)
         }
         get("/channels/{channelId}/messages") {
           val channelId = ChannelId(call.requirePathParameter("channelId"))

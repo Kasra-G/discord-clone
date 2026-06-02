@@ -2,6 +2,7 @@
 
 package com.ghkasra.discordclone.repository
 
+import com.ghkasra.discordclone.repository.RefreshTokens.accessedAt
 import com.ghkasra.discordclone.repository.RefreshTokens.createdAt
 import com.ghkasra.discordclone.repository.RefreshTokens.deviceId
 import com.ghkasra.discordclone.repository.RefreshTokens.expiresAt
@@ -21,12 +22,14 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.datetime.timestamp
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.updateReturning
 import org.jetbrains.exposed.v1.jdbc.upsertReturning
 
 @JvmInline value class RefreshTokenHash(val value: String)
@@ -40,6 +43,7 @@ data class RefreshTokenCredentials(
     val createdAt: Instant,
     val updatedAt: Instant,
     val expiresAt: Instant,
+    val accessedAt: Instant,
     val isRevoked: Boolean,
     val isExpired: Boolean,
     val userId: UserId,
@@ -50,6 +54,7 @@ object RefreshTokens : UuidTable("refresh_tokens", uuidVersion = UuidVersion.V7)
   val tokenHash = text("token_hash").uniqueIndex()
   val createdAt = timestamp("created_at").clientDefault { Clock.System.now() }
   val updatedAt = timestamp("updated_at").clientDefault { Clock.System.now() }
+  val accessedAt = timestamp("accessed_at").clientDefault { Clock.System.now() }
   val expiresAt = timestamp("expires_at")
   val isRevoked = bool("is_revoked").clientDefault { false }
   val userId = reference("user_id", Users, onDelete = ReferenceOption.CASCADE)
@@ -82,10 +87,19 @@ class RefreshTokenRepository(val db: Database) {
             .toRefreshTokenCredentials()
       }
 
-  fun findByTokenHash(token: RefreshTokenHash): RefreshTokenCredentials? =
+  fun findValidTokenByHash(token: RefreshTokenHash, deviceId: DeviceId): RefreshTokenCredentials? =
       transaction(db) {
-        RefreshTokens.selectAll()
-            .where { tokenHash.eq(token.value) }
+        RefreshTokens.updateReturning(
+                where = {
+                  tokenHash.eq(token.value) and
+                      isRevoked.eq(false) and
+                      expiresAt.greater(Clock.System.now()) and
+                      RefreshTokens.deviceId.eq(deviceId.value)
+                }
+            ) {
+              it[this.accessedAt] = Clock.System.now()
+              it[this.updatedAt] = Clock.System.now()
+            }
             .singleOrNull()
             ?.toRefreshTokenCredentials()
       }
@@ -126,4 +140,5 @@ fun ResultRow.toRefreshTokenCredentials() =
         userId = UserId(get(userId).value),
         isExpired = get(expiresAt) < Clock.System.now(),
         deviceId = DeviceId(get(deviceId)),
+        accessedAt = get(accessedAt),
     )
