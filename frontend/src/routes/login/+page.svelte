@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { login } from '$lib/backend.remote';
+	import { login, logout } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
 	import { userStore } from '$lib/user.svelte';
 	import { type RemoteFormField, type RemoteFormFieldValue } from '@sveltejs/kit';
+	let submissionError = $state<string>();
 </script>
 
 {#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
@@ -16,9 +17,16 @@
 <form
 	{...login.preflight(schemas.LOGIN)}
 	{...login.enhance(async (form) => {
-		if (await form.submit()) {
+		submissionError = '';
+		if (!(await form.submit())) {
+			return;
+		}
+
+		userStore.current = form.result?.user;
+		submissionError = form.result?.error;
+
+		if (form.result?.ok) {
 			form.element.reset();
-			userStore.current = login.result;
 			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/chat';
 			goto(redirectTo);
 		}
@@ -34,17 +42,14 @@
 		<label>Password <input {...login.fields._password.as('password')} /> </label>
 		{@render showErrors(login.fields._password)}
 	</div>
+	{#if submissionError}
+		<div class="issue-text">{submissionError}</div>
+	{/if}
 	<div class="register-text">
 		Don't have an account? <a href="/register">Register</a>
 	</div>
-	<button>Login</button>
+	<button disabled={!!login.pending}>Login</button>
 </form>
-
-<button
-	onclick={async () => {
-		await userStore.clear();
-	}}>Logout</button
->
 
 <style>
 	.register-text {

@@ -30,7 +30,7 @@ fun Application.configureRequestValidation() {
               error = cause.message ?: "Bad Input",
           ),
       )
-      call.application.log.error(cause)
+      call.application.log.error(cause.message)
     }
 
     exception<Throwable> { call, cause ->

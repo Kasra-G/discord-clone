@@ -4,6 +4,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.ghkasra.discordclone.Environment
+import com.ghkasra.discordclone.model.ServiceException
 import com.ghkasra.discordclone.repository.DeviceId
 import com.ghkasra.discordclone.repository.PasswordHash
 import com.ghkasra.discordclone.repository.RefreshTokenHash
@@ -44,8 +45,9 @@ class AuthenticationService(
 ) {
 
   fun authenticateByUserLogin(userLogin: UserLogin): Boolean {
-    val credentials = credentialsRepository.findByUsername(userLogin.username)
-    requireNotNull(credentials) { "User does not have credentials" }
+    val credentials =
+        credentialsRepository.findByUsername(userLogin.username)
+            ?: throw ServiceException.Unauthorized("Invalid username or password")
 
     return passwordUtil.verifyPassword(userLogin.password, credentials.passwordHash)
   }
