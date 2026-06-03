@@ -76,6 +76,7 @@
 				{...sendMessage.fields.message.as('text')}
 				class="message-input"
 				autocomplete="off"
+				disabled={websocketService.status !== 'CONNECTED'}
 				placeholder="Type a message..."
 				bind:this={inputField}
 			/>
