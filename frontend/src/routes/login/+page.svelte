@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { login, logout } from '$lib/backend.remote';
+	import { login } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
-	import { userStore } from '$lib/user.svelte';
+	import { getUserState } from '$lib/user.svelte';
 	import { type RemoteFormField, type RemoteFormFieldValue } from '@sveltejs/kit';
 	let submissionError = $state<string>();
+	const userState = getUserState();
 </script>
 
 {#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
@@ -22,7 +23,7 @@
 			return;
 		}
 
-		userStore.current = form.result?.user;
+		userState.current = form.result?.user;
 		submissionError = form.result?.error;
 
 		if (form.result?.ok) {

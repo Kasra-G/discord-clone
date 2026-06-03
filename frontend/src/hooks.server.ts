@@ -26,5 +26,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			});
 		}
 	}
+	event.locals.authenticated = authenticated;
 	return await resolve(event);
 };

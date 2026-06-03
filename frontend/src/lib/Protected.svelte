@@ -1,10 +1,10 @@
 <script>
-	import { userStore } from './user.svelte';
+	import { getUserState } from './user.svelte';
 
 	const { children } = $props();
 </script>
 
-{#if userStore.loggedIn}
+{#if getUserState().authenticated()}
 	{@render children()}
 {:else}
 	Unauthorized

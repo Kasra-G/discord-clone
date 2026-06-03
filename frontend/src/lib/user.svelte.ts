@@ -1,13 +1,14 @@
-import { logout } from './backend.remote';
+import { getContext } from 'svelte';
 import type { User } from './model';
 
 const KEY = 'app_user';
 
-class UserStore {
+export class UserState {
 	current = $state<User>();
-	readonly loggedIn = $derived(this.current !== undefined);
 
-	initialize() {
+	constructor(readonly authenticated: () => boolean) {}
+
+	initializeUser() {
 		const saved = localStorage.getItem(KEY);
 		if (saved) {
 			try {
@@ -25,11 +26,12 @@ class UserStore {
 		});
 	}
 
-	async clear() {
+	async clearUser() {
 		this.current = undefined;
 		localStorage.removeItem(KEY);
-		await logout();
 	}
 }
 
-export const userStore = new UserStore();
+export const USER_STATE_KEY = Symbol('user_state');
+
+export const getUserState = () => getContext<UserState>(USER_STATE_KEY);

@@ -2,12 +2,17 @@
 	import { page } from '$app/state';
 	import favicon from '$lib/assets/favicon.svg';
 	import { logout } from '$lib/backend.remote';
-	import { userStore } from '$lib/user.svelte';
-	import { onMount } from 'svelte';
+	import { USER_STATE_KEY, UserState } from '$lib/user.svelte';
+	import { onMount, setContext } from 'svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
+
+	const userState = new UserState(() => data.authenticated);
+
+	setContext(USER_STATE_KEY, userState);
+
 	onMount(() => {
-		userStore.initialize();
+		userState.initializeUser();
 	});
 </script>
 
@@ -23,22 +28,23 @@
 
 <div class="root">
 	<div class="navbar">
-		{#if userStore.loggedIn}
+		{@render navbarButton('/', 'Home')}
+		{#if userState.authenticated()}
 			<form
 				{...logout.enhance(async (form) => {
 					if (await form.submit()) {
-						await userStore.clear();
+						await userState.clearUser();
 					}
 				})}
 			>
 				<button disabled={!!logout.pending}>Logout</button>
 			</form>
-
-			{@render navbarButton('/profile', 'Profile')}
-			{@render navbarButton('/chat', 'Chat')}
 		{:else}
 			{@render navbarButton('/login', 'Login')}
 		{/if}
+
+		{@render navbarButton('/profile', 'Profile')}
+		{@render navbarButton('/chat', 'Chat')}
 	</div>
 
 	<div class="body">

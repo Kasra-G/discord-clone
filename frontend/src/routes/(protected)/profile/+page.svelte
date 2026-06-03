@@ -1,16 +1,17 @@
 <script lang="ts">
-	import { userStore } from '$lib/user.svelte';
+	import { getUserState } from '$lib/user.svelte';
+  const userState = getUserState()
 </script>
 
-Logged in: {userStore.loggedIn}
+Logged in: {userState.authenticated()}
 
 <br />
 <br />
 
-{#if userStore.current}
-	Username: {userStore.current.username} <br />
-	email: {userStore.current.email} <br />
-	id: {userStore.current.id} <br />
-	createdAt: {userStore.current.createdAt} <br />
-	updatedAt: {userStore.current.updatedAt} <br />
+{#if userState.current}
+	Username: {userState.current.username} <br />
+	email: {userState.current.email} <br />
+	id: {userState.current.id} <br />
+	createdAt: {userState.current.createdAt} <br />
+	updatedAt: {userState.current.updatedAt} <br />
 {/if}
