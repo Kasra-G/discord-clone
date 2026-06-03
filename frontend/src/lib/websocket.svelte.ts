@@ -1,4 +1,5 @@
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
+import { checkAuthenticated, getAuthenticated } from './backend.remote';
 
 const MAX_DELAY_MS = 10000;
 const INITIAL_DELAY_MS = 100;
@@ -28,12 +29,21 @@ export class WebsocketService {
 		onOpen: []
 	};
 
+	destroy() {
+		if (this.ws) {
+			this.ws.onclose = () => {};
+			this.ws.close();
+		}
+		this.resetReconnectSettings();
+	}
+
 	connect() {
 		if (this.ws) {
 			this.ws.close();
 		}
 
 		this._status = 'CONNECTING';
+
 		this.ws = new WebSocket(`${PUBLIC_BACKEND_URL}/ws`);
 
 		this.ws.addEventListener('open', () => {
@@ -46,8 +56,13 @@ export class WebsocketService {
 			this.subscribers.onMessage.forEach((handle) => handle(JSON.parse(messageEvent.data)));
 		});
 
-		this.ws.addEventListener('close', () => {
+		this.ws.addEventListener('close', async () => {
+			await checkAuthenticated();
 			this.handleReconnect();
+		});
+
+		window.addEventListener('beforeunload', () => {
+			this.destroy();
 		});
 	}
 

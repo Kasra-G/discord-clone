@@ -1,9 +1,10 @@
-import { command, form, getRequestEvent, query } from '$app/server';
+import { form, getRequestEvent, query } from '$app/server';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
-import type { LoginFormResponse, Message, User } from './model';
+import type { LoginFormResponse, Message } from './model';
 import * as schemas from './schemas';
 import { invalid, redirect } from '@sveltejs/kit';
+import { redirectLogin } from './util.svelte';
 
 export const getMotd = query(async () => {
 	const response = await fetch(PUBLIC_BACKEND_URL);
@@ -22,25 +23,26 @@ export const logout = form(async () => {
 	redirect(308, '/');
 });
 
-export const sendMessage = command(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
+export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
+	checkAuthenticated();
 	const event = getRequestEvent();
-	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
+	await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
 		method: 'POST',
 		body: JSON.stringify({ message: message, channelId: channelId }),
 		headers: { 'content-type': 'application/json' }
 	});
-
-	return {
-		status: res.status
-	};
 });
 
 export const checkAuthenticated = query(async () => {
 	const event = getRequestEvent();
 
-	if (!event.locals.authenticated) {
-		redirect(307, '/login');
+	if (!getAuthenticated()) {
+		redirectLogin(event.url.pathname);
 	}
+});
+
+export const getAuthenticated = query(async () => {
+	return getRequestEvent().locals.authenticated;
 });
 
 export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {

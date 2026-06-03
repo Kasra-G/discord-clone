@@ -5,7 +5,7 @@ import { websocketService } from './websocket.svelte';
 class CommandService {
 	constructor() {
 		websocketService.onMessage((msg) => {
-			if (msg.command === 'NEW_MESSAGE') this.messages.push(msg.payload);
+			if (msg.command === 'NEW_MESSAGE') this._messages.push(msg.payload);
 		});
 	}
 

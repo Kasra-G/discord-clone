@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { getMotd, sendMessage } from '$lib/backend.remote';
 	import { commandService } from '$lib/command-service.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
@@ -7,20 +6,8 @@
 	let inputField: HTMLElement;
 	const messages = $derived(commandService.messages);
 
-	let inputText = $state('');
 	let viewport = $state<HTMLDivElement>();
 	let autoscroll = $state(true);
-
-	const onSubmit = async (e: SubmitEvent) => {
-		e.preventDefault();
-		const { status } = await sendMessage({ message: inputText });
-		if (status === 401) {
-			goto('/login');
-		}
-
-		inputField.focus();
-		inputText = '';
-	};
 
 	$effect(() => {
 		if (!viewport) return;
@@ -29,6 +16,7 @@
 		if (!autoscroll) return;
 		viewport.scrollTo(0, viewport.scrollHeight);
 	});
+	await commandService.loadMessages();
 </script>
 
 <div class="wrapper">
@@ -75,12 +63,19 @@
 				{/each}
 			</div>
 		</div>
-		<form onsubmit={onSubmit} class="message-input-container">
+		<form
+			{...sendMessage.enhance(async (form) => {
+				if (await form.submit()) {
+					form.element.reset();
+					inputField.focus();
+				}
+			})}
+			class="message-input-container"
+		>
 			<input
+				{...sendMessage.fields.message.as('text')}
 				class="message-input"
-				type="text"
 				placeholder="Type a message..."
-				bind:value={inputText}
 				bind:this={inputField}
 			/>
 		</form>
