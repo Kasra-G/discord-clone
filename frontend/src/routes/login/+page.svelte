@@ -36,11 +36,11 @@
 >
 	<h3>Login</h3>
 	<div>
-		<label>Username <input {...login.fields.username.as('text')} /> </label>
+		<label>Username <input {...login.fields.username.as('text')} autocomplete="off" /> </label>
 		{@render showErrors(login.fields.username)}
 	</div>
 	<div>
-		<label>Password <input {...login.fields._password.as('password')} /> </label>
+		<label>Password <input {...login.fields._password.as('password')} autocomplete="off" /> </label>
 		{@render showErrors(login.fields._password)}
 	</div>
 	{#if submissionError}

@@ -13,11 +13,11 @@
 <form {...register.preflight(schemas.REGISTER)} oninput={() => register.validate()}>
 	<h3>Register</h3>
 	<div>
-		<label>Email <input {...register.fields.email.as('email')} /> </label>
+		<label>Email <input {...register.fields.email.as('email')} autocomplete="off" /> </label>
 		{@render showErrors(register.fields.email)}
 	</div>
 	<div>
-		<label>Username <input {...register.fields.username.as('text')} /> </label>
+		<label>Username <input {...register.fields.username.as('text')} autocomplete="off" /> </label>
 		{@render showErrors(register.fields.username)}
 	</div>
 	<div>

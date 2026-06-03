@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getUserState } from '$lib/user.svelte';
-  const userState = getUserState()
+	const userState = getUserState();
 </script>
 
 Logged in: {userState.authenticated()}

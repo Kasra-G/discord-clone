@@ -75,6 +75,7 @@
 			<input
 				{...sendMessage.fields.message.as('text')}
 				class="message-input"
+				autocomplete="off"
 				placeholder="Type a message..."
 				bind:this={inputField}
 			/>
