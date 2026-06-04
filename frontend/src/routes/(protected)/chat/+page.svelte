@@ -1,34 +1,28 @@
 <script lang="ts">
-	import { getMotd, sendMessage } from '$lib/backend.remote';
+	import { getMessages, getMotd, sendMessage } from '$lib/backend.remote';
 	import { commandService } from '$lib/command-service.svelte';
+	import type { Message } from '$lib/model';
 	import { websocketService } from '$lib/websocket.svelte';
 
 	let inputField: HTMLElement;
-	const messages = $derived(commandService.messages);
+	commandService.onMessage((msg) => messages.unshift(msg));
 
-	let viewport = $state<HTMLDivElement>();
 	let autoscroll = $state(true);
+	let messages = $state<Message[]>([]);
 
-	$effect(() => {
-		if (!viewport) return;
+	const scrollFirst = (elem: HTMLElement) => {
 		if (messages.length <= 0) return;
-		if (!messages[messages.length - 1]) return;
 		if (!autoscroll) return;
-		viewport.scrollTo(0, viewport.scrollHeight);
-	});
-	await commandService.loadMessages();
+		elem.firstElementChild?.scrollIntoView();
+	};
+
+	const promise = getMessages({ channelId: 'default', count: 20 }).then((res) => (messages = res));
+	await promise;
 </script>
 
 <div class="wrapper">
 	<h3>
-		Message of the Day:
-
-		<svelte:boundary>
-			{await getMotd()}
-			{#snippet pending()}
-				Loading...
-			{/snippet}
-		</svelte:boundary>
+		Message of the Day: {await getMotd()}
 	</h3>
 
 	<h3>Server status: {websocketService.status}</h3>
@@ -36,36 +30,38 @@
 	<div class="messages-container">
 		<div
 			class="chatbox-outer"
-			bind:this={viewport}
-			onscroll={() => {
-				if (!viewport) return;
-				autoscroll = viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop < 1;
+			onscroll={({ currentTarget }) => {
+				autoscroll =
+					currentTarget.scrollHeight - currentTarget.clientHeight - currentTarget.scrollTop < 1;
 			}}
 		>
-			<div class="chatbox-inner">
-				{#each messages.toReversed() as msg (msg.id)}
-					<div class="message">
-						<div class="message-header">
-							<div class="message-username">
-								{msg.author.username}
+			<svelte:boundary>
+				<div class="chatbox-inner" {@attach scrollFirst}>
+					{#each messages as msg (msg.id)}
+						<div class="message">
+							<div class="message-header">
+								<div class="message-username">
+									{msg.author.username}
+								</div>
+								<div class="message-timestamp">
+									{new Date(msg.createdAt).toLocaleString([], {
+										dateStyle: 'short',
+										timeStyle: 'short'
+									})}
+								</div>
 							</div>
-							<div class="message-timestamp">
-								{new Date(msg.createdAt).toLocaleString([], {
-									dateStyle: 'short',
-									timeStyle: 'short'
-								})}
+							<div>
+								{msg.content}
 							</div>
 						</div>
-						<div>
-							{msg.content}
-						</div>
-					</div>
-				{/each}
-			</div>
+					{/each}
+				</div>
+				{#snippet pending()}{/snippet}
+			</svelte:boundary>
 		</div>
 		<form
 			{...sendMessage.enhance(async (form) => {
-				if (await form.submit()) {
+				if (await form.submit().updates()) {
 					form.element.reset();
 					inputField.focus();
 				}
