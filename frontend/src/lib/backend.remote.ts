@@ -1,4 +1,4 @@
-import { form, getRequestEvent, query, requested } from '$app/server';
+import { form, getRequestEvent, query } from '$app/server';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
 import type { LoginFormResponse, Message } from './model';

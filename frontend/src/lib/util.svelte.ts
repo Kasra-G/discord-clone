@@ -1,9 +1,11 @@
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { page } from '$app/state';
 import { redirect } from '@sveltejs/kit';
 
-export function gotoLogin() {
-	goto(getLoginRedirectUrl(page.url.pathname));
+export async function gotoLogin() {
+	// eslint-disable-next-line svelte/no-navigation-without-resolve
+	await goto(getLoginRedirectUrl(page.url.pathname));
 }
 
 export function redirectLogin(pathname: string) {
@@ -11,5 +13,5 @@ export function redirectLogin(pathname: string) {
 }
 
 export function getLoginRedirectUrl(returnPath: string) {
-	return `/login?redirectTo=${encodeURIComponent(returnPath)}`;
+	return `${resolve('/login')}?redirectTo=${encodeURIComponent(returnPath)}`;
 }

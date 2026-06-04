@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import favicon from '$lib/assets/favicon.svg';
 	import { logout } from '$lib/backend.remote';
@@ -28,7 +29,7 @@
 
 <div class="root">
 	<div class="navbar">
-		{@render navbarButton('/', 'Home')}
+		{@render navbarButton(resolve('/'), 'Home')}
 		{#if userState.authenticated()}
 			<form
 				{...logout.enhance(async (form) => {
@@ -40,11 +41,11 @@
 				<button disabled={!!logout.pending}>Logout</button>
 			</form>
 		{:else}
-			{@render navbarButton('/login', 'Login')}
+			{@render navbarButton(resolve('/login'), 'Login')}
 		{/if}
 
-		{@render navbarButton('/profile', 'Profile')}
-		{@render navbarButton('/chat', 'Chat')}
+		{@render navbarButton(resolve('/profile'), 'Profile')}
+		{@render navbarButton(resolve('/chat'), 'Chat')}
 	</div>
 
 	<div class="body">

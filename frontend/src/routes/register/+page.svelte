@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { register } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
 	import type { RemoteFormField, RemoteFormFieldValue } from '@sveltejs/kit';
 </script>
 
 {#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
-	{#each field.issues() as issue}
+	{#each field.issues() as issue, i (i)}
 		<div class="issue-text">{issue.message}</div>
 	{/each}
 {/snippet}
@@ -29,7 +30,7 @@
 		{@render showErrors(register.fields._confirmPassword)}
 	</div>
 	<div class="login-text">
-		Already have an account? <a href="/login">Login</a>
+		Already have an account? <a href={resolve('/login')}>Login</a>
 	</div>
 	<button>Register</button>
 </form>

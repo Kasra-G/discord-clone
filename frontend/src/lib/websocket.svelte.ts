@@ -1,6 +1,11 @@
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
-type MessageHandler = (message: any) => void;
+export interface Command {
+	command: string;
+	payload: unknown;
+}
+
+type MessageHandler = (message: Command) => void;
 type OpenHandler = () => void;
 
 interface SubscriberMap {

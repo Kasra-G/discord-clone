@@ -125,7 +125,7 @@ fun Application.configureRouting() {
           val channelId = ChannelId(call.requirePathParameter("channelId"))
           val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
           require(count > -1) { "Count must be positive" }
-          require(count < 100) { "Count must be less than 100" }
+          require(count <= 100) { "Count must be less than equal to 100" }
           call.respond(msgRepo.listMessages(channelId, count))
         }
       }

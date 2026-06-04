@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { login } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
@@ -10,7 +11,7 @@
 </script>
 
 {#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
-	{#each field.issues() as issue}
+	{#each field.issues() as issue, i (i)}
 		<div class="issue-text">{issue.message}</div>
 	{/each}
 {/snippet}
@@ -29,7 +30,8 @@
 		if (form.result?.ok) {
 			form.element.reset();
 			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/chat';
-			goto(redirectTo);
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			await goto(redirectTo);
 		}
 	})}
 	onchange={() => login.validate()}
@@ -47,7 +49,7 @@
 		<div class="issue-text">{submissionError}</div>
 	{/if}
 	<div class="register-text">
-		Don't have an account? <a href="/register">Register</a>
+		Don't have an account? <a href={resolve('/register')}>Register</a>
 	</div>
 	<button disabled={!!login.pending}>Login</button>
 </form>

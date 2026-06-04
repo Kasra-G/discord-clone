@@ -13,7 +13,7 @@ export class UserState {
 		if (saved) {
 			try {
 				this.current = JSON.parse(saved);
-			} catch (_) {
+			} catch {
 				console.log('Clearing broken local storage user');
 				localStorage.removeItem(KEY);
 			}

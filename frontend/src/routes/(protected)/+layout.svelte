@@ -14,7 +14,7 @@
 
 	$effect(() => {
 		if (!getUserState().authenticated()) {
-			gotoLogin();
+			gotoLogin().catch(console.error);
 		}
 	});
 </script>

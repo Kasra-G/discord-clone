@@ -11,13 +11,15 @@
 
 	messageService.onMessage((msg) => messages.push(msg));
 
-	const scrollToLast = (elem: HTMLElement) => {
+	const autoscrollToLast = (elem: HTMLElement) => {
 		if (messages.length <= 0) return;
 		if (!autoscroll) return;
 		elem.lastElementChild?.scrollIntoView();
 	};
 
-	const promise = getMessages({ channelId: 'default', count: 20 }).then((res) => (messages = res.reverse()));
+	const promise = getMessages({ channelId: 'default', count: 99 }).then(
+		(res) => (messages = res.reverse())
+	);
 	await promise;
 </script>
 
@@ -37,7 +39,7 @@
 			}}
 		>
 			<svelte:boundary>
-				<div class="chatbox-inner" {@attach scrollToLast}>
+				<div class="chatbox-inner" {@attach autoscrollToLast}>
 					{#each messages as msg (msg.id)}
 						<div class="message">
 							<div class="message-header">
@@ -117,6 +119,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
+	}
+
+	.message:first-child {
+		margin-top: auto;
 	}
 
 	.message-header {
