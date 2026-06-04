@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { getMessages, getMotd, sendMessage } from '$lib/backend.remote';
-	import { commandService } from '$lib/command-service.svelte';
+	import { messageService } from '$lib/message-service.svelte';
 	import type { Message } from '$lib/model';
 	import { websocketService } from '$lib/websocket.svelte';
 
 	let inputField: HTMLElement;
-	commandService.onMessage((msg) => messages.unshift(msg));
+	messageService.onMessage((msg) => messages.unshift(msg));
 
 	let autoscroll = $state(true);
 	let messages = $state<Message[]>([]);

@@ -2,7 +2,7 @@ import { websocketService } from './websocket.svelte';
 
 export type MessageHandler = (message: any) => void;
 
-class CommandService {
+class MessageService {
 	private readonly subscribers: MessageHandler[] = [];
 	constructor() {
 		websocketService.onMessage((msg) => {
@@ -15,4 +15,4 @@ class CommandService {
 	}
 }
 
-export const commandService = new CommandService();
+export const messageService = new MessageService();
