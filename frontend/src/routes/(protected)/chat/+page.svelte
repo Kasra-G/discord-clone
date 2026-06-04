@@ -24,9 +24,7 @@
 </script>
 
 <div class="wrapper">
-	<h3>
-		Message of the Day: {await getMotd()}
-	</h3>
+	<h3> Message of the Day: {await getMotd()} </h3>
 
 	<h3>Server status: {websocketService.status}</h3>
 
