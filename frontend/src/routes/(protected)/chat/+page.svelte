@@ -5,18 +5,19 @@
 	import { websocketService } from '$lib/websocket.svelte';
 
 	let inputField: HTMLElement;
-	messageService.onMessage((msg) => messages.unshift(msg));
 
 	let autoscroll = $state(true);
 	let messages = $state<Message[]>([]);
 
-	const scrollFirst = (elem: HTMLElement) => {
+	messageService.onMessage((msg) => messages.push(msg));
+
+	const scrollToLast = (elem: HTMLElement) => {
 		if (messages.length <= 0) return;
 		if (!autoscroll) return;
-		elem.firstElementChild?.scrollIntoView();
+		elem.lastElementChild?.scrollIntoView();
 	};
 
-	const promise = getMessages({ channelId: 'default', count: 20 }).then((res) => (messages = res));
+	const promise = getMessages({ channelId: 'default', count: 20 }).then((res) => (messages = res.reverse()));
 	await promise;
 </script>
 
@@ -36,7 +37,7 @@
 			}}
 		>
 			<svelte:boundary>
-				<div class="chatbox-inner" {@attach scrollFirst}>
+				<div class="chatbox-inner" {@attach scrollToLast}>
 					{#each messages as msg (msg.id)}
 						<div class="message">
 							<div class="message-header">
@@ -103,7 +104,7 @@
 	.chatbox-inner {
 		min-height: 100%;
 		display: flex;
-		flex-direction: column-reverse;
+		flex-direction: column;
 	}
 
 	.message {
