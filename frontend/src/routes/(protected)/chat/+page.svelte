@@ -18,7 +18,7 @@
 	};
 
 	const promise = getMessages({ channelId: 'default', count: 100 }).then(
-		(res) => (messages = res.reverse())
+		(res) => (messages = res.toReversed())
 	);
 	await promise;
 </script>

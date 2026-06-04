@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import type { ResolvedPathname } from '$app/types';
+	import type { Pathname } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
 	import { logout } from '$lib/backend.remote';
 	import { USER_STATE_KEY, UserState } from '$lib/user.svelte';
@@ -21,9 +23,11 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{#snippet navbarButton(pathname: string, text: string)}
+{#snippet navbarButton(pathname: ResolvedPathname, text: string)}
 	<form method="GET" action={pathname}>
-		<button disabled={page.url.pathname === pathname} type="submit">{text}</button>
+		<button disabled={resolve(page.url.pathname as unknown as Pathname) === pathname} type="submit"
+			>{text}</button
+		>
 	</form>
 {/snippet}
 
