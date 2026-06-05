@@ -61,6 +61,7 @@
 <style>
 	.navbar {
 		display: flex;
+		border-bottom: 2px solid var(--background-secondary);
 	}
 	.body {
 		flex-grow: 1;
