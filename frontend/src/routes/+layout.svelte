@@ -5,6 +5,7 @@
 	import type { Pathname } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
 	import { logout } from '$lib/backend.remote';
+	import { DEFAULT_CHANNEL, DEFAULT_GUILD } from '$lib/const.js';
 	import { USER_STATE_KEY, UserState } from '$lib/user.svelte';
 	import { onMount, setContext } from 'svelte';
 
@@ -49,7 +50,7 @@
 		{/if}
 
 		{@render navbarButton(resolve('/profile'), 'Profile')}
-		{@render navbarButton(resolve('/chat'), 'Chat')}
+		{@render navbarButton(resolve(`/guilds/${DEFAULT_GUILD}/channels/${DEFAULT_CHANNEL}`), 'Chat')}
 	</div>
 
 	<div class="body">

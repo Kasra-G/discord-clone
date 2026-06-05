@@ -1,21 +1,43 @@
 <script lang="ts">
+	import { beforeNavigate } from '$app/navigation';
 	import { getMessages, sendMessage } from '$lib/backend.remote';
 	import { messageService } from '$lib/message-service.svelte';
-	import type { Message } from '$lib/model';
 	import { websocketService } from '$lib/websocket.svelte';
 	import { onMount } from 'svelte';
 
-	let inputField: HTMLElement;
+	let { params } = $props();
 
+	let inputField: HTMLElement;
 	let autoscroll = $state(true);
-	let messages = $state<Message[]>([]);
+
+	beforeNavigate(({ to }) => {
+		const channelId = to?.params?.channelId;
+		if (channelId) {
+			void getMessages({
+				channelId: channelId,
+				count: 100
+			}).refresh();
+		}
+	});
+
+	let _messages = $derived(
+		await getMessages({
+			channelId: params.channelId,
+			count: 100
+		})
+	);
+
+	let messages = $derived.by(() => {
+		let _ = $state(_messages);
+		return _;
+	});
 
 	onMount(() => {
-		getMessages({
-			channelId: 'default',
-			count: 100
-		}).then((res) => (messages = res));
-		return messageService.subscribeOnMessage((msg) => messages.push(msg));
+		return messageService.subscribeOnMessage((msg) => {
+			if (msg.channelId === params.channelId) {
+				messages.push(msg);
+			}
+		});
 	});
 
 	const autoscrollToLast = (elem: HTMLElement) => {
@@ -26,6 +48,7 @@
 </script>
 
 <div class="messages-container">
+	<h4>{params.channelId}</h4>
 	<div
 		class="chatbox-outer"
 		onscroll={({ currentTarget }) => {
@@ -71,6 +94,7 @@
 			placeholder="Type a message..."
 			bind:this={inputField}
 		/>
+		<input {...sendMessage.fields.channelId.as('hidden', params.channelId)} />
 	</form>
 </div>
 
@@ -78,8 +102,7 @@
 	.messages-container {
 		display: flex;
 		flex-direction: column;
-		flex-grow: 1;
-		min-height: 0;
+		width: 100%;
 	}
 
 	.chatbox-outer {
