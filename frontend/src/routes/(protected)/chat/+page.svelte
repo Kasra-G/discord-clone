@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getMessages, getMotd, sendMessage } from '$lib/backend.remote';
+	import { getMessages, sendMessage } from '$lib/backend.remote';
 	import { messageService } from '$lib/message-service.svelte';
 	import type { Message } from '$lib/model';
 	import { websocketService } from '$lib/websocket.svelte';
@@ -11,6 +11,10 @@
 	let messages = $state<Message[]>([]);
 
 	onMount(() => {
+		getMessages({
+			channelId: 'default',
+			count: 100
+		}).then((res) => (messages = res));
 		return messageService.subscribeOnMessage((msg) => messages.push(msg));
 	});
 
@@ -19,78 +23,58 @@
 		if (!autoscroll) return;
 		elem.lastElementChild?.scrollIntoView();
 	};
-
-	const promise = getMessages({ channelId: 'default', count: 100 }).then(
-		(res) => (messages = res.toReversed())
-	);
-	await promise;
 </script>
 
-<div class="wrapper">
-	<h3>Message of the Day: {await getMotd()}</h3>
-
-	<h3>Server status: {websocketService.status}</h3>
-
-	<div class="messages-container">
-		<div
-			class="chatbox-outer"
-			onscroll={({ currentTarget }) => {
-				autoscroll =
-					currentTarget.scrollHeight - currentTarget.clientHeight - currentTarget.scrollTop < 1;
-			}}
-		>
-			<svelte:boundary>
-				<div class="chatbox-inner" {@attach autoscrollToLast}>
-					{#each messages as msg (msg.id)}
-						<div class="message">
-							<div class="message-header">
-								<div class="message-username">
-									{msg.author.username}
-								</div>
-								<div class="message-timestamp">
-									{new Date(msg.createdAt).toLocaleString([], {
-										dateStyle: 'short',
-										timeStyle: 'short'
-									})}
-								</div>
-							</div>
-							<div>
-								{msg.content}
-							</div>
+<div class="messages-container">
+	<div
+		class="chatbox-outer"
+		onscroll={({ currentTarget }) => {
+			autoscroll =
+				currentTarget.scrollHeight - currentTarget.clientHeight - currentTarget.scrollTop < 1;
+		}}
+	>
+		<div class="chatbox-inner" {@attach autoscrollToLast}>
+			{#each messages as msg (msg.id)}
+				<div class="message">
+					<div class="message-header">
+						<div class="message-username">
+							{msg.author.username}
 						</div>
-					{/each}
+						<div class="message-timestamp">
+							{new Date(msg.createdAt).toLocaleString([], {
+								dateStyle: 'short',
+								timeStyle: 'short'
+							})}
+						</div>
+					</div>
+					<div>
+						{msg.content}
+					</div>
 				</div>
-				{#snippet pending()}{/snippet}
-			</svelte:boundary>
+			{/each}
 		</div>
-		<form
-			{...sendMessage.enhance(async (form) => {
-				if (await form.submit().updates()) {
-					form.element.reset();
-					inputField.focus();
-				}
-			})}
-			class="message-input-container"
-		>
-			<input
-				{...sendMessage.fields.message.as('text')}
-				class="message-input"
-				autocomplete="off"
-				disabled={websocketService.status !== 'CONNECTED'}
-				placeholder="Type a message..."
-				bind:this={inputField}
-			/>
-		</form>
 	</div>
+	<form
+		{...sendMessage.enhance(async (form) => {
+			if (await form.submit().updates()) {
+				form.element.reset();
+				inputField.focus();
+			}
+		})}
+		class="message-input-container"
+	>
+		<input
+			{...sendMessage.fields.message.as('text')}
+			class="message-input"
+			autocomplete="off"
+			disabled={websocketService.status !== 'CONNECTED'}
+			placeholder="Type a message..."
+			bind:this={inputField}
+		/>
+	</form>
 </div>
 
 <style>
-	.wrapper {
-		display: flex;
-		flex-direction: column;
-		height: 100%;
-	}
-
 	.messages-container {
 		display: flex;
 		flex-direction: column;

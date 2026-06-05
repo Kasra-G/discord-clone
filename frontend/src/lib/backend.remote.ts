@@ -51,7 +51,8 @@ export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count
 	const response = await event.fetch(
 		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`
 	);
-	return (await response.json()) as Message[];
+	const messages = (await response.json()) as Message[];
+	return messages.toReversed();
 });
 
 export const register = form(schemas.REGISTER, async (data, issue) => {
