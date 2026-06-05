@@ -4,7 +4,7 @@ import { websocketService } from './websocket.svelte';
 export type MessageHandler = (message: Message) => void;
 
 class MessageService {
-	private readonly subscribers: MessageHandler[] = [];
+	private readonly subscribers: Set<MessageHandler> = new Set();
 	constructor() {
 		websocketService.onMessage((msg) => {
 			if (msg.command === 'NEW_MESSAGE')
@@ -12,8 +12,13 @@ class MessageService {
 		});
 	}
 
-	onMessage(handler: MessageHandler) {
-		this.subscribers.push(handler);
+	unsubscribeOnMessage(handler: MessageHandler) {
+		this.subscribers.delete(handler);
+	}
+
+	subscribeOnMessage(handler: MessageHandler) {
+		this.subscribers.add(handler);
+		return () => this.unsubscribeOnMessage(handler);
 	}
 }
 

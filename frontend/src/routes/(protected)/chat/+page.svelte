@@ -3,13 +3,16 @@
 	import { messageService } from '$lib/message-service.svelte';
 	import type { Message } from '$lib/model';
 	import { websocketService } from '$lib/websocket.svelte';
+	import { onMount } from 'svelte';
 
 	let inputField: HTMLElement;
 
 	let autoscroll = $state(true);
 	let messages = $state<Message[]>([]);
 
-	messageService.onMessage((msg) => messages.push(msg));
+	onMount(() => {
+		return messageService.subscribeOnMessage((msg) => messages.push(msg));
+	});
 
 	const autoscrollToLast = (elem: HTMLElement) => {
 		if (messages.length <= 0) return;
