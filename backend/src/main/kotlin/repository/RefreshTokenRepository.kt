@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package com.ghkasra.discordclone.repository
 
 import com.ghkasra.discordclone.repository.RefreshTokens.accessedAt
@@ -14,7 +12,6 @@ import com.ghkasra.discordclone.repository.RefreshTokens.userId
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.core.ReferenceOption

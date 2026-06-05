@@ -20,7 +20,6 @@ import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 import kotlin.time.toJavaInstant
-import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.serialization.Serializable
 
 @Serializable @JvmInline value class Password(val value: String)
@@ -80,7 +79,6 @@ class AuthenticationService(
   private fun hashRefreshToken(token: RefreshToken) =
       RefreshTokenHash(hashUtil.hash(hashUtil.hash(token.value)))
 
-  @OptIn(ExperimentalUuidApi::class)
   private fun createAccessToken(userId: UserId) =
       AccessToken(
           JWT.create()
@@ -134,7 +132,6 @@ class RefreshTokenFactory {
 }
 
 class HashUtil(val digest: MessageDigest) {
-  //    val digest = MessageDigest.getInstance("SHA-256")
   fun hash(value: String): String = digest.digest(value.encodeToByteArray()).toHexString()
 }
 

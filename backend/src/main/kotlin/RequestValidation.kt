@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class RequestException(val code: Int, val error: String)
 
 fun Application.configureRequestValidation() {
+  val log = log
   install(StatusPages) {
     exception<ServiceException> { call, cause ->
       call.respond(
@@ -30,7 +31,7 @@ fun Application.configureRequestValidation() {
               error = cause.message ?: "Bad Input",
           ),
       )
-      call.application.log.error(cause.message)
+      log.error(cause.message)
     }
 
     exception<Throwable> { call, cause ->
@@ -41,7 +42,7 @@ fun Application.configureRequestValidation() {
               error = cause.message ?: "Unhandled Exception",
           ),
       )
-      call.application.log.error(cause)
+      log.error(cause)
     }
   }
 

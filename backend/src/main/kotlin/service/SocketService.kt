@@ -2,7 +2,6 @@ package com.ghkasra.discordclone.service
 
 import com.ghkasra.discordclone.model.ClientCommand
 import com.ghkasra.discordclone.repository.Message
-import com.ghkasra.discordclone.repository.MessageRepository
 import com.ghkasra.discordclone.repository.User
 import com.ghkasra.discordclone.repository.UserId
 import com.ghkasra.discordclone.repository.UserRepository
@@ -16,11 +15,11 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.serialization.Serializable
+import org.slf4j.Logger
 
 @Serializable data class WebsocketClientInitiation(val token: AccessToken)
 
 class SocketService(
-    val messageRepository: MessageRepository,
     val userRepository: UserRepository,
 ) {
   private val sessionMap =
@@ -29,13 +28,14 @@ class SocketService(
           CopyOnWriteArrayList<WebSocketServerSession>,
       >()
 
+  context(logger: Logger)
   suspend fun acceptConnection(session: WebSocketServerSession, userId: UserId) {
 
     val user = userRepository.get(userId)
     val username = user.username
     sessionMap.getOrPut(user.id) { CopyOnWriteArrayList() }.add(session)
     // todo: replace the system messages with status indicator commands
-    session.application.log.info("connected $username")
+    logger.info("connected $username")
     //    session.sendChannelMessage(
     //        sender = Username.SYSTEM,
     //        message = "${username.value} has joined the chat room",

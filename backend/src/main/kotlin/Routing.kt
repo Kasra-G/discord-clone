@@ -36,7 +36,6 @@ import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -63,78 +62,79 @@ fun Application.configureRouting() {
   val userService = UserService(authService, userRepo)
   val socketService =
       SocketService(
-          messageRepository = msgRepo,
           userRepository = userRepo,
       )
 
-  routing {
-    route("/api") {
-      post("/users/register") {
-        val request = call.receive<UserRegistrationRequest>()
-        val response = userService.register(request)
-        call.respond(HttpStatusCode.Created, response)
-      }
-      post("/users/login") {
-        val request = call.receive<UserLoginRequest>()
-        val response = userService.login(request)
-        setAuthorizationCookies(BearerTokens(response.refreshToken, response.accessToken))
-        call.respond(
-            HttpStatusCode.OK,
-            response,
-        )
-      }
-      post("/auth/refresh") {
-        val request = call.receive<AccessTokenRefreshRequest>()
-        val refreshToken =
-            RefreshToken(call.requireCookie(AuthenticationService.REFRESH_TOKEN_COOKIE_NAME))
-        val response = authService.generateAccessToken(refreshToken, request.deviceId)
-        setAuthorizationCookies(BearerTokens(response.refreshToken, response.accessToken))
-        call.respond(
-            HttpStatusCode.OK,
-            AccessTokenRefreshResponse(response.refreshToken, response.accessToken),
-        )
-      }
-      authenticate {
-        post("/auth/revoke") {
-          val claim = call.retrieveAuthenticatedClaims()
-          refreshTokenRepo.revokeAll(claim.userId)
-          call.respond(HttpStatusCode.OK)
+  context(log) {
+    routing {
+      route("/api") {
+        post("/users/register") {
+          val request = call.receive<UserRegistrationRequest>()
+          val response = userService.register(request)
+          call.respond(HttpStatusCode.Created, response)
         }
-        get("/hello") {
-          val claims = call.retrieveAuthenticatedClaims()
-          val expiresIn = claims.expiresAt.minus(Clock.System.now())
-          val userDetails = userRepo.get(claims.userId)
-
-          call.respondText(
-              "Hello, ${userDetails.username}! Token expires in ${expiresIn.toString(DurationUnit.MILLISECONDS)} ms."
+        post("/users/login") {
+          val request = call.receive<UserLoginRequest>()
+          val response = userService.login(request)
+          setAuthorizationCookies(BearerTokens(response.refreshToken, response.accessToken))
+          call.respond(
+              HttpStatusCode.OK,
+              response,
           )
         }
-        post("/channels/{channelId}/messages") {
-          val request = call.receive<CreateMessageRequest>()
-          val claims = call.retrieveAuthenticatedClaims()
-          val message =
-              msgRepo.save(
-                  channelId = request.channelId,
-                  content = request.message,
-                  authorId = claims.userId,
-              )
-          launch { socketService.sendChannelMessage(message) }
-          call.respond(HttpStatusCode.Created)
+        post("/auth/refresh") {
+          val request = call.receive<AccessTokenRefreshRequest>()
+          val refreshToken =
+              RefreshToken(call.requireCookie(AuthenticationService.REFRESH_TOKEN_COOKIE_NAME))
+          val response = authService.generateAccessToken(refreshToken, request.deviceId)
+          setAuthorizationCookies(BearerTokens(response.refreshToken, response.accessToken))
+          call.respond(
+              HttpStatusCode.OK,
+              AccessTokenRefreshResponse(response.refreshToken, response.accessToken),
+          )
         }
-        get("/channels/{channelId}/messages") {
-          val channelId = ChannelId(call.requirePathParameter("channelId"))
-          val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
-          require(count > -1) { "Count must be positive" }
-          require(count <= 100) { "Count must be less than equal to 100" }
-          call.respond(msgRepo.listMessages(channelId, count))
+        authenticate {
+          post("/auth/revoke") {
+            val claim = call.retrieveAuthenticatedClaims()
+            refreshTokenRepo.revokeAll(claim.userId)
+            call.respond(HttpStatusCode.OK)
+          }
+          get("/hello") {
+            val claims = call.retrieveAuthenticatedClaims()
+            val expiresIn = claims.expiresAt.minus(Clock.System.now())
+            val userDetails = userRepo.get(claims.userId)
+
+            call.respondText(
+                "Hello, ${userDetails.username}! Token expires in ${expiresIn.toString(DurationUnit.MILLISECONDS)} ms."
+            )
+          }
+          post("/channels/{channelId}/messages") {
+            val request = call.receive<CreateMessageRequest>()
+            val claims = call.retrieveAuthenticatedClaims()
+            val message =
+                msgRepo.save(
+                    channelId = request.channelId,
+                    content = request.message,
+                    authorId = claims.userId,
+                )
+            launch { socketService.sendChannelMessage(message) }
+            call.respond(HttpStatusCode.Created)
+          }
+          get("/channels/{channelId}/messages") {
+            val channelId = ChannelId(call.requirePathParameter("channelId"))
+            val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
+            require(count > -1) { "Count must be positive" }
+            require(count <= 100) { "Count must be less than equal to 100" }
+            call.respond(msgRepo.listMessages(channelId, count))
+          }
         }
       }
-    }
-    get("/") { call.respondText("Hello, World!") }
-    authenticate {
-      webSocket("/ws") {
-        val claims = call.retrieveAuthenticatedClaims()
-        socketService.acceptConnection(this, claims.userId)
+      get("/") { call.respondText("Hello, World!") }
+      authenticate {
+        webSocket("/ws") {
+          val claims = call.retrieveAuthenticatedClaims()
+          socketService.acceptConnection(this, claims.userId)
+        }
       }
     }
   }
@@ -142,7 +142,6 @@ fun Application.configureRouting() {
 
 data class UserClaims(val userId: UserId, val expiresAt: Instant)
 
-@OptIn(ExperimentalUuidApi::class)
 fun ApplicationCall.retrieveAuthenticatedClaims(): UserClaims {
   val principal = principal<JWTPrincipal>()
   checkNotNull(principal) { "Call JWTPrincipal is null" }
