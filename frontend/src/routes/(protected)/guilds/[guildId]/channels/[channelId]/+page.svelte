@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { beforeNavigate } from '$app/navigation';
-	import { getMessages, sendMessage } from '$lib/backend.remote';
+	import { getChannel, getMessages, sendMessage } from '$lib/backend.remote';
 	import { messageService } from '$lib/message-service.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
 	import { onMount } from 'svelte';
@@ -45,10 +45,17 @@
 		if (!autoscroll) return;
 		elem.lastElementChild?.scrollIntoView();
 	};
+
+	const getChannelDetails = () => {
+		return getChannel({ channelId: params.channelId });
+	};
 </script>
 
 <div class="messages-container">
-	<h4>{params.channelId}</h4>
+	<div class="header">
+		<h4>#{(await getChannelDetails()).name}</h4>
+		<h5>{(await getChannelDetails()).description}</h5>
+	</div>
 	<div
 		class="chatbox-outer"
 		onscroll={({ currentTarget }) => {
@@ -103,6 +110,10 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
+	}
+
+	.header {
+		padding-left: 10px;
 	}
 
 	.chatbox-outer {

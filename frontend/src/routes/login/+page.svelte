@@ -29,7 +29,7 @@
 
 		if (form.result?.ok) {
 			form.element.reset();
-			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/';
+			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/guilds/default/';
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			await goto(redirectTo);
 		}
