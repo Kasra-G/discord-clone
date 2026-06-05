@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Protected from '$lib/Protected.svelte';
-	import { getUserState } from '$lib/user.svelte';
+	import Protected from '$lib/components/Protected.svelte';
+import { getUserState } from '$lib/user.svelte';
 	import { gotoLogin } from '$lib/util.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
 	import { onMount } from 'svelte';
