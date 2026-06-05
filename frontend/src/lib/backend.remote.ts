@@ -1,7 +1,7 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
-import type { LoginFormResponse, Message } from './model';
+import type { Channel, LoginFormResponse, Message } from './model';
 import * as schemas from './schemas';
 import { invalid, redirect } from '@sveltejs/kit';
 import { redirectLogin } from './util.svelte';
@@ -9,6 +9,27 @@ import { redirectLogin } from './util.svelte';
 export const getMotd = query(async () => {
 	const response = await fetch(PUBLIC_BACKEND_URL);
 	return await response.text();
+});
+
+export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
+	checkAuthenticated();
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
+		method: 'GET'
+	});
+
+	const channels = (await response.json()) as Channel[];
+	return channels;
+});
+
+export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
+	checkAuthenticated();
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}`, {
+		method: 'GET'
+	});
+
+	return (await response.json()) as Channel;
 });
 
 export const logout = form(async () => {

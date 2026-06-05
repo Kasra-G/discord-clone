@@ -7,6 +7,14 @@ export interface Message {
 	readonly author: User;
 }
 
+export interface Channel {
+	readonly id: string;
+	readonly createdAt: string;
+	readonly updatedAt: string;
+	readonly name: string;
+	readonly description: string;
+}
+
 export interface User {
 	readonly id: string;
 	readonly createdAt: string;

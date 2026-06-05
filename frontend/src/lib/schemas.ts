@@ -38,6 +38,14 @@ export const SEND_MESSAGE = z.object({
 	channelId: z.string().nonempty()
 });
 
+export const GET_CHANNELS = z.object({
+	guildId: z.string().nonempty()
+});
+
+export const GET_CHANNEL = z.object({
+	channelId: z.string().nonempty()
+});
+
 export interface UserDetails {
 	readonly id: string;
 	readonly username: string;
