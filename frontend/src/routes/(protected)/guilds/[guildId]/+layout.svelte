@@ -12,7 +12,7 @@
 	let channels = $derived(await getChannels({ guildId: params.guildId }));
 	let draggingSidepanel = $state(false);
 	let sidepanelWidth = $state(200);
-	let sidepanelRect = $state<DOMRect>();
+	let sidepanel: HTMLDivElement;
 </script>
 
 {#snippet channelButton(channel: Channel)}
@@ -26,7 +26,7 @@
 {/snippet}
 
 <div class="wrapper">
-	<div class="side-panel" style:width={`${sidepanelWidth}px`} bind:contentRect={sidepanelRect}>
+	<div class="side-panel" style:width={`${sidepanelWidth}px`} bind:this={sidepanel}>
 		<h3 class="text-overflow">JuanDaSwancord</h3>
 		<div class="channel-list">
 			{#each channels as channel (channel.id)}
@@ -49,15 +49,13 @@
 			draggingSidepanel = false;
 		}}
 		onpointermove={(e) => {
-			if (!draggingSidepanel || !sidepanelRect) return;
+			if (!draggingSidepanel || !sidepanel) return;
 			e.preventDefault();
-			sidepanelWidth = Math.max(0, e.clientX - sidepanelRect.left);
+			sidepanelWidth = Math.max(0, e.clientX - sidepanel.getBoundingClientRect().left - 2);
 		}}
 	></div>
 	<div class="channel-wrapper">{@render children()}</div>
 </div>
-
-<!-- // <svelte:document /> -->
 
 <style>
 	.channel-entry-container {
@@ -92,6 +90,7 @@
 		flex-direction: column;
 	}
 	.side-panel-profile {
+		margin-left: -50px;
 		margin-top: auto;
 		text-align: center;
 		margin-bottom: 5px;
@@ -101,13 +100,14 @@
 	}
 	.side-panel {
 		display: flex;
+		box-sizing: border-box;
 		flex-direction: column;
 		min-width: 100px;
 		max-width: 300px;
 		padding-inline: 5px;
 	}
 	.side-panel-slider {
-		width: 3px;
+		width: 5px;
 		background-color: var(--background-secondary);
 		cursor: col-resize;
 	}

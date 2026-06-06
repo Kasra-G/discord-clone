@@ -2,6 +2,7 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { getChannel, getMessages, sendMessage } from '$lib/backend.remote';
 	import { messageService } from '$lib/message-service.svelte';
+	import { deep } from '$lib/util.svelte.js';
 	import { websocketService } from '$lib/websocket.svelte';
 	import { onMount } from 'svelte';
 
@@ -9,8 +10,7 @@
 
 	let inputField: HTMLElement;
 	let autoscroll = $state(true);
-
-	let messages = $derived(await getMessages({ channelId: params.channelId, count: 100 }));
+	let messages = $derived(deep(await getMessages({ channelId: params.channelId, count: 100 })));
 
 	beforeNavigate(({ to }) => {
 		const channelId = to?.params?.channelId;
@@ -25,7 +25,7 @@
 	onMount(() => {
 		return messageService.subscribeOnMessage((msg) => {
 			if (msg.channelId === params.channelId) {
-				messages = [...messages, msg];
+				messages.push(msg);
 			}
 		});
 	});

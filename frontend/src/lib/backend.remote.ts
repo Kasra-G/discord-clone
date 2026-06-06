@@ -12,7 +12,6 @@ export const getMotd = query(async () => {
 });
 
 export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
 		method: 'GET'
@@ -23,7 +22,6 @@ export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
 });
 
 export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}`, {
 		method: 'GET'
@@ -33,7 +31,6 @@ export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
 });
 
 export const logout = form(async () => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	await event.fetch(`${schemas.BASE_API_URL}/auth/revoke`, {
 		method: 'POST',
@@ -41,11 +38,11 @@ export const logout = form(async () => {
 	});
 	event.cookies.delete('refresh_token', { path: '/' });
 	event.cookies.delete('access_token', { path: '/' });
+	void getAuthenticated().refresh();
 	redirect(308, '/');
 });
 
 export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
 		method: 'POST',
@@ -57,17 +54,19 @@ export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelI
 export const checkAuthenticated = query(async () => {
 	const event = getRequestEvent();
 
-	if (!getAuthenticated()) {
+	if (!(await getAuthenticated())) {
 		redirectLogin(event.url.pathname);
 	}
 });
 
 export const getAuthenticated = query(async () => {
-	return getRequestEvent().locals.authenticated;
+	const event = getRequestEvent();
+	const refresh_token = event.cookies.get('refresh_token');
+
+	return !!refresh_token;
 });
 
 export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	const response = await event.fetch(
 		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`
@@ -77,7 +76,6 @@ export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count
 });
 
 export const register = form(schemas.REGISTER, async (data, issue) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 
 	const response = await event.fetch(`${schemas.BASE_API_URL}/users/register`, {
@@ -123,6 +121,7 @@ export const login = form(
 			event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
 		});
 
+		void getAuthenticated().refresh();
 		return { ok: true, user: body.user };
 	}
 );

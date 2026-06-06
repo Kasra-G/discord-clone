@@ -15,3 +15,8 @@ export function redirectLogin(pathname: string) {
 export function getLoginRedirectUrl(returnPath: string) {
 	return `${resolve('/login')}?redirectTo=${encodeURIComponent(returnPath)}`;
 }
+
+export const deep = <T>(arr: T): T => {
+	let _ = $state(arr);
+	return _;
+};
