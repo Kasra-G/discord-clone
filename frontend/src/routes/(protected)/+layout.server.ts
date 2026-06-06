@@ -1,3 +1,4 @@
+export const ssr = true;
 import { redirectLogin } from '$lib/util.svelte';
 import type { LayoutServerLoad } from '../$types';
 

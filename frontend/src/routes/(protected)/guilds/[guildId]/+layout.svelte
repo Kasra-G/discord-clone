@@ -6,29 +6,42 @@
 	import type { Channel } from '$lib/model';
 	import { getUserState } from '$lib/user.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
+	import { onMount } from 'svelte';
 
 	let { params, children } = $props();
 
 	let channels = $derived(await getChannels({ guildId: params.guildId }));
-	let draggingChannel = false;
-	let panelWidth = $state(200);
+	let draggingSidepanel = $state(false);
+	let sidepanelWidth = $state(200);
+	let sidepanelRect = $state<DOMRect>();
+
+	onMount(() => {
+		sidepanelWidth =
+			JSON.parse(localStorage.getItem('sidepanel-width') ?? '{}').sidepanelWidth ?? sidepanelWidth;
+	});
+
+	$effect(() => {
+		localStorage.setItem('sidepanel-width', JSON.stringify({ sidepanelWidth: sidepanelWidth }));
+	});
 </script>
 
 {#snippet channelButton(channel: Channel)}
-	<form
-		class="channel-entry-container"
-		method="GET"
-		action={resolve(`/guilds/${DEFAULT_GUILD}/channels/${channel.id}`)}
-	>
-		<button class="channel-entry" disabled={page.params.channelId === channel.id}
-			>#{channel.name}</button
+	<div class="channel-entry-container">
+		<a
+			class="channel-entry text-overflow"
+			href={resolve(`/guilds/${DEFAULT_GUILD}/channels/${channel.id}`)}
+			class:selected={page.params.channelId === channel.id}>#{channel.name}</a
 		>
-	</form>
+	</div>
 {/snippet}
 
 <div class="wrapper">
-	<div class="side-panel" bind:clientWidth={panelWidth}>
-		<h3>JuanDaSwancord {websocketService.status}</h3>
+	<div
+		class="side-panel"
+		style={`--sidepanel-width: ${sidepanelWidth}px`}
+		bind:contentRect={sidepanelRect}
+	>
+		<h3 class="text-overflow">JuanDaSwancord</h3>
 		<div class="channel-list">
 			{#each channels as channel (channel.id)}
 				{@render channelButton(channel)}
@@ -37,27 +50,52 @@
 		<div class="side-panel-profile">{getUserState().current?.username}</div>
 	</div>
 
-	<!-- 	class="side-panel-slider" -->
-	<!-- 	role="slider" -->
-	<!-- 	tabindex="-1" -->
-	<!-- 	aria-valuenow={panelWidth} -->
-	<!-- 	onmousedown={() => (draggingChannel = true)} -->
-	<!-- ></div> -->
+	<div
+		class="side-panel-slider"
+		role="separator"
+		class:dragging={draggingSidepanel}
+		onpointerdown={(e) => {
+			e.currentTarget.setPointerCapture(e.pointerId);
+			draggingSidepanel = true;
+		}}
+		onpointerup={(e) => {
+			e.currentTarget.releasePointerCapture(e.pointerId);
+			draggingSidepanel = false;
+		}}
+		onpointermove={(e) => {
+			if (!draggingSidepanel || !sidepanelRect) return;
+			e.preventDefault();
+			sidepanelWidth = Math.max(0, e.clientX - sidepanelRect.left);
+		}}
+	></div>
 	<div class="channel-wrapper">{@render children()}</div>
 </div>
 
+<!-- // <svelte:document /> -->
+
 <style>
+	.channel-entry-container {
+		display: flex;
+	}
 	.channel-entry {
+		border-radius: 5px;
 		width: 100%;
 		font-size: medium;
 		text-align: left;
-		padding-left: 10px;
+		padding: 4px 10px;
+		color: var(--text-muted);
+		text-decoration: none;
+	}
+
+	.text-overflow {
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
 	}
-	.channel-entry-container {
-		display: flex;
+
+	.selected {
+		background-color: var(--background-secondary);
+		color: var(--text-normal);
 	}
 	.channel-list {
 		display: flex;
@@ -73,14 +111,19 @@
 	}
 	.side-panel {
 		display: flex;
-		resize: horizontal;
-		overflow: auto;
 		flex-direction: column;
-		width: 200px;
-		min-width: 150px;
-		max-width: 600px;
+		width: var(--sidepanel-width);
+		min-width: 100px;
+		max-width: 300px;
 		padding-inline: 5px;
-		border-right: 2px solid var(--background-secondary);
+	}
+	.side-panel-slider {
+		width: 3px;
+		background-color: var(--background-secondary);
+		cursor: col-resize;
+	}
+	.dragging {
+		background-color: var(--background-accent);
 	}
 	.channel-wrapper {
 		display: flex;
