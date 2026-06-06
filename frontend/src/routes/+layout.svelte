@@ -1,23 +1,22 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import type { ResolvedPathname } from '$app/types';
-	import type { Pathname } from '$app/types';
+	import type { ResolvedPathname, Pathname } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
 	import { logout } from '$lib/backend.remote';
-	import { DEFAULT_CHANNEL, DEFAULT_GUILD } from '$lib/const.js';
-	import { USER_STATE_KEY, UserState } from '$lib/user.svelte';
-	import { onMount, setContext } from 'svelte';
+	import { DEFAULT_GUILD } from '$lib/const';
+	import { setUserState, UserState } from '$lib/user.svelte';
 
 	let { children, data } = $props();
 
 	const userState = new UserState(() => data.authenticated);
 
-	setContext(USER_STATE_KEY, userState);
+	setUserState(userState);
 
-	onMount(() => {
+	if (browser) {
 		userState.initializeUser();
-	});
+	}
 </script>
 
 <svelte:head>

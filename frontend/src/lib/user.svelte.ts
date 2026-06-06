@@ -1,4 +1,4 @@
-import { getContext } from 'svelte';
+import { createContext } from 'svelte';
 import type { User } from './model';
 
 const KEY = 'app_user';
@@ -32,6 +32,4 @@ export class UserState {
 	}
 }
 
-export const USER_STATE_KEY = Symbol('user_state');
-
-export const getUserState = () => getContext<UserState>(USER_STATE_KEY);
+export const [getUserState, setUserState] = createContext<UserState>();

@@ -124,7 +124,7 @@
 		border-radius: 10px;
 		padding: 10px;
 		background-color: var(--background-primary);
-		color: var(--text-muted);
+		color: var(--text-normal);
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
@@ -146,6 +146,7 @@
 
 	.message-timestamp {
 		font-size: small;
+		color: var(--text-muted);
 	}
 
 	.message-input-container {

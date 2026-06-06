@@ -6,7 +6,6 @@
 	import type { Channel } from '$lib/model';
 	import { getUserState } from '$lib/user.svelte';
 	import { websocketService } from '$lib/websocket.svelte';
-	import { onMount } from 'svelte';
 
 	let { params, children } = $props();
 
@@ -14,15 +13,6 @@
 	let draggingSidepanel = $state(false);
 	let sidepanelWidth = $state(200);
 	let sidepanelRect = $state<DOMRect>();
-
-	onMount(() => {
-		sidepanelWidth =
-			JSON.parse(localStorage.getItem('sidepanel-width') ?? '{}').sidepanelWidth ?? sidepanelWidth;
-	});
-
-	$effect(() => {
-		localStorage.setItem('sidepanel-width', JSON.stringify({ sidepanelWidth: sidepanelWidth }));
-	});
 </script>
 
 {#snippet channelButton(channel: Channel)}
@@ -36,11 +26,7 @@
 {/snippet}
 
 <div class="wrapper">
-	<div
-		class="side-panel"
-		style={`--sidepanel-width: ${sidepanelWidth}px`}
-		bind:contentRect={sidepanelRect}
-	>
+	<div class="side-panel" style:width={`${sidepanelWidth}px`} bind:contentRect={sidepanelRect}>
 		<h3 class="text-overflow">JuanDaSwancord</h3>
 		<div class="channel-list">
 			{#each channels as channel (channel.id)}
@@ -77,6 +63,10 @@
 	.channel-entry-container {
 		display: flex;
 	}
+
+	.channel-entry:hover {
+		color: var(--text-normal);
+	}
 	.channel-entry {
 		border-radius: 5px;
 		width: 100%;
@@ -112,7 +102,6 @@
 	.side-panel {
 		display: flex;
 		flex-direction: column;
-		width: var(--sidepanel-width);
 		min-width: 100px;
 		max-width: 300px;
 		padding-inline: 5px;
