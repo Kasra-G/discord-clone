@@ -10,6 +10,8 @@
 	let inputField: HTMLElement;
 	let autoscroll = $state(true);
 
+	let messages = $derived(await getMessages({ channelId: params.channelId, count: 100 }));
+
 	beforeNavigate(({ to }) => {
 		const channelId = to?.params?.channelId;
 		if (channelId) {
@@ -20,22 +22,10 @@
 		}
 	});
 
-	let _messages = $derived(
-		await getMessages({
-			channelId: params.channelId,
-			count: 100
-		})
-	);
-
-	let messages = $derived.by(() => {
-		let _ = $state(_messages);
-		return _;
-	});
-
 	onMount(() => {
 		return messageService.subscribeOnMessage((msg) => {
 			if (msg.channelId === params.channelId) {
-				messages.push(msg);
+				messages = [...messages, msg];
 			}
 		});
 	});

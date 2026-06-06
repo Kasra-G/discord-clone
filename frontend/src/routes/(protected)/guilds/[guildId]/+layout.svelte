@@ -10,6 +10,8 @@
 	let { params, children } = $props();
 
 	let channels = $derived(await getChannels({ guildId: params.guildId }));
+	let draggingChannel = false;
+	let panelWidth = $state(200);
 </script>
 
 {#snippet channelButton(channel: Channel)}
@@ -25,7 +27,7 @@
 {/snippet}
 
 <div class="wrapper">
-	<div class="side-panel">
+	<div class="side-panel" bind:clientWidth={panelWidth}>
 		<h3>JuanDaSwancord {websocketService.status}</h3>
 		<div class="channel-list">
 			{#each channels as channel (channel.id)}
@@ -34,6 +36,13 @@
 		</div>
 		<div class="side-panel-profile">{getUserState().current?.username}</div>
 	</div>
+
+	<!-- 	class="side-panel-slider" -->
+	<!-- 	role="slider" -->
+	<!-- 	tabindex="-1" -->
+	<!-- 	aria-valuenow={panelWidth} -->
+	<!-- 	onmousedown={() => (draggingChannel = true)} -->
+	<!-- ></div> -->
 	<div class="channel-wrapper">{@render children()}</div>
 </div>
 
@@ -43,6 +52,9 @@
 		font-size: medium;
 		text-align: left;
 		padding-left: 10px;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 	.channel-entry-container {
 		display: flex;
@@ -56,17 +68,18 @@
 		text-align: center;
 		margin-bottom: 5px;
 		padding: 15px;
-		border-width: 5px;
+		border: 5px solid var(--background-secondary);
 		border-radius: 20px;
-		border-color: var(--background-secondary);
-		border-style: solid;
 	}
 	.side-panel {
 		display: flex;
+		resize: horizontal;
+		overflow: auto;
 		flex-direction: column;
 		width: 200px;
-		padding-left: 10px;
-		padding-right: 5px;
+		min-width: 150px;
+		max-width: 600px;
+		padding-inline: 5px;
 		border-right: 2px solid var(--background-secondary);
 	}
 	.channel-wrapper {

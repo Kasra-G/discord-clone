@@ -44,7 +44,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 
 fun Application.configureRouting() {
   install(IgnoreTrailingSlash)
-  val db = Database.connect(getEnvOrThrow("DATABASE_URL"))
+  val db = Database.connect(Environment.DATABASE_URL)
   val msgRepo = MessageRepository(db)
   val userRepo = UserRepository(db)
   val refreshTokenRepo = RefreshTokenRepository(db)
