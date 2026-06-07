@@ -4,9 +4,9 @@
 	import { messageService } from '$lib/message-service.svelte';
 	import { deep } from '$lib/util.svelte.js';
 	import { websocketService } from '$lib/websocket.svelte';
-	import type { RemoteFormField, RemoteFormFieldValue } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
 	import * as schemas from '$lib/schemas';
+	import { showErrors } from '$lib/snippets.svelte';
 
 	let { params } = $props();
 
@@ -45,12 +45,6 @@
 		return getChannel({ channelId: params.channelId });
 	};
 </script>
-
-{#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
-	{#each field.issues() as issue, i (i)}
-		<div class="issue-text">{issue.message}</div>
-	{/each}
-{/snippet}
 
 <div class="messages-container">
 	<div class="header">
@@ -177,10 +171,6 @@
 			border-radius: 10px;
 			margin: 10px;
 			font-size: medium;
-		}
-		.issue-text {
-			font-size: small;
-			color: var(--red);
 		}
 
 		:focus-visible {

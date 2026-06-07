@@ -1,6 +1,5 @@
 <script>
-	import { getUserState } from "$lib/user.svelte";
-
+	import { getUserState } from '$lib/user.svelte';
 
 	const { children } = $props();
 </script>

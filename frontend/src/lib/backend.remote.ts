@@ -44,15 +44,15 @@ export const logout = form(async () => {
 
 export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
 	const event = getRequestEvent();
-	const res =await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
+	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
 		method: 'POST',
 		body: JSON.stringify({ message: message, channelId: channelId }),
 		headers: { 'content-type': 'application/json' }
 	});
-  return {
-    ok: res.ok,
-    error: !res.ok
-  }
+	return {
+		ok: res.ok,
+		error: !res.ok
+	};
 });
 
 export const checkAuthenticated = query(async () => {

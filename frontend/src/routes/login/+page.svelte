@@ -4,17 +4,12 @@
 	import { page } from '$app/state';
 	import { login } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
+	import { showErrors } from '$lib/snippets.svelte';
 	import { getUserState } from '$lib/user.svelte';
-	import { type RemoteFormField, type RemoteFormFieldValue } from '@sveltejs/kit';
+
 	let submissionError = $state<string>();
 	const userState = getUserState();
 </script>
-
-{#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
-	{#each field.issues() as issue, i (i)}
-		<div class="issue-text">{issue.message}</div>
-	{/each}
-{/snippet}
 
 <form
 	{...login.preflight(schemas.LOGIN)}
@@ -57,9 +52,5 @@
 <style>
 	.register-text {
 		font-size: small;
-	}
-	.issue-text {
-		font-size: small;
-		color: var(--red);
 	}
 </style>
