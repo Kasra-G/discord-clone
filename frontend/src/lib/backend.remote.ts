@@ -61,9 +61,9 @@ export const checkAuthenticated = query(async () => {
 
 export const getAuthenticated = query(async () => {
 	const event = getRequestEvent();
-	const refresh_token = event.cookies.get('refresh_token');
+	const access_token = event.cookies.get('access_token');
 
-	return !!refresh_token;
+	return !!access_token;
 });
 
 export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {

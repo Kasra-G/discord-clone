@@ -33,6 +33,30 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 };
 
 export const handle: Handle = async ({ resolve, event }) => {
-	event.locals.authenticated = await getAuthenticated();
+	const refresh_token = event.cookies.get('refresh_token');
+	const authenticated = await getAuthenticated();
+
+	event.locals.authenticated = authenticated;
+	if (!authenticated && refresh_token) {
+		const refresh = await event.fetch(`${schemas.BASE_API_URL}/auth/refresh`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				deviceId: 'my-device'
+			})
+		});
+
+		event.locals.authenticated = refresh.ok;
+		if (refresh.ok) {
+			const cookies = parseSetCookie(refresh);
+			cookies.forEach((cookie) => {
+				const { name, value, ...options } = cookie;
+				event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
+			});
+		} else {
+			event.cookies.delete('access_token', { path: '/' });
+			event.cookies.delete('refresh_token', { path: '/' });
+		}
+	}
 	return await resolve(event);
 };

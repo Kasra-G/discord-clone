@@ -90,7 +90,6 @@
 		flex-direction: column;
 	}
 	.side-panel-profile {
-		margin-left: -50px;
 		margin-top: auto;
 		text-align: center;
 		margin-bottom: 5px;
