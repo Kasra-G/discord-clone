@@ -48,7 +48,7 @@
 </script>
 
 <div class="messages-container">
-	<div class="header">
+	<div class="channel-header">
 		<h4>#{(await getChannelDetails()).name}</h4>
 		<h5>{(await getChannelDetails()).description}</h5>
 	</div>
@@ -128,8 +128,9 @@
 		font-size: 0.85rem;
 	}
 
-	.header {
+	.channel-header {
 		padding-left: 10px;
+		border-bottom: 1px solid var(--accent);
 	}
 
 	.chatbox-outer {
@@ -142,6 +143,7 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
+		min-height: 0;
 	}
 
 	.message {
@@ -159,7 +161,6 @@
 			display: flex;
 			align-items: center;
 			gap: 20px;
-			padding-left: 0px;
 
 			.username {
 				font-size: large;
@@ -188,7 +189,7 @@
 			border: 1px solid var(--accent);
 			color: var(--foreground);
 			min-height: 56px;
-			padding: 12px 12px 8px 20px;
+			padding: 18px 12px 16px 20px;
 			max-height: 200px;
 			field-sizing: content;
 

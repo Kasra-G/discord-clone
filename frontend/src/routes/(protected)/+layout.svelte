@@ -84,7 +84,6 @@
 	}
 
 	.sidebar-profile {
-		margin-top: auto;
 		background-color: var(--secondary);
 		text-align: center;
 		margin: 8px;
