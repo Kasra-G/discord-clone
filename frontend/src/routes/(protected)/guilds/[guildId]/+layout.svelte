@@ -98,6 +98,7 @@
 		border-radius: 20px;
 	}
 	.side-panel {
+		flex-shrink: 0;
 		display: flex;
 		box-sizing: border-box;
 		flex-direction: column;
@@ -106,6 +107,7 @@
 		padding-inline: 5px;
 	}
 	.side-panel-slider {
+		flex-shrink: 0;
 		width: 5px;
 		background-color: var(--background-secondary);
 		cursor: col-resize;
@@ -116,6 +118,8 @@
 	.channel-wrapper {
 		display: flex;
 		flex-grow: 1;
+		max-width: 100%;
+		min-width: 0;
 	}
 	.wrapper {
 		display: flex;
