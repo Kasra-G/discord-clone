@@ -34,7 +34,7 @@ export const LOGIN = z.object({
 });
 
 export const SEND_MESSAGE = z.object({
-	message: z.string().nonempty('').max(255, 'Message too long'),
+	message: z.string().nonempty(' ').max(255, 'Message too long'),
 	channelId: z.string().nonempty()
 });
 

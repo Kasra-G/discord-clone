@@ -13,6 +13,6 @@
 <style>
 	.issue-text {
 		font-size: small;
-		color: var(--red);
+		color: var(--destructive);
 	}
 </style>

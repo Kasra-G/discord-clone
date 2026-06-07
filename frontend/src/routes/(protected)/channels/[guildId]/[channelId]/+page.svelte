@@ -91,15 +91,23 @@
 		oninput={() => sendMessage.validate()}
 		class="message-input-container"
 	>
-		{@render showErrors(sendMessage.fields.message)}
-		<input
+		<div class="input-error-wrapper">
+			{@render showErrors(sendMessage.fields.message)}
+		</div>
+		<textarea
 			{...sendMessage.fields.message.as('text')}
 			class="message-input"
 			autocomplete="off"
 			disabled={websocketService.status !== 'CONNECTED'}
 			placeholder="Type a message..."
 			bind:this={inputField}
-		/>
+			onkeydown={async (e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					await sendMessage.submit();
+				}
+			}}
+		></textarea>
 		<input {...sendMessage.fields.channelId.as('hidden', params.channelId)} />
 	</form>
 </div>
@@ -108,7 +116,13 @@
 	.messages-container {
 		display: flex;
 		flex-direction: column;
-		width: 100%;
+		height: 100%;
+	}
+
+	.input-error-wrapper {
+		margin-bottom: 4px;
+		padding-left: 4px;
+		font-size: 0.85rem;
 	}
 
 	.header {
@@ -122,36 +136,39 @@
 	}
 
 	.chatbox-inner {
-		min-height: 100%;
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
 	}
 
 	.message {
-		margin: 0px 5px 5px;
-		border: 1px solid var(--background-secondary);
-		border-radius: 10px;
-		padding: 10px;
-		background-color: var(--background-primary);
-		color: var(--text-normal);
+		margin: 0px 4px 4px;
+		border: 1px solid var(--accent);
+		border-radius: 12px;
+		padding: 12px;
+		background-color: var(--background);
+		color: var(--foreground);
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: 4px;
 
 		.header {
 			display: flex;
+			align-items: center;
 			gap: 20px;
-		}
-		.username {
-			font-size: medium;
-			color: var(--text-normal);
-		}
-		.timestamp {
-			font-size: small;
-			color: var(--text-muted);
+			padding-left: 0px;
+
+			.username {
+				font-size: large;
+				color: var(--primary);
+			}
+			.timestamp {
+				font-size: small;
+				color: var(--muted-foreground);
+			}
 		}
 		.content {
+			font-size: medium;
 			text-wrap-mode: wrap;
 			overflow-wrap: break-word;
 			white-space: break-spaces;
@@ -165,16 +182,28 @@
 		flex-direction: column;
 
 		.message-input {
+			color: var(--foreground);
 			flex-grow: 1;
-			max-width: 100%;
-			padding: 15px;
-			border-radius: 10px;
-			margin: 10px;
+			min-height: 44px;
+			max-height: 200px;
+
+			padding: 12px;
+			border-radius: 12px;
+			background-color: var(--input);
+			margin: 8px;
+
 			font-size: medium;
 		}
 
-		:focus-visible {
+		textarea {
+			font-family: inherit;
+			resize: none;
+			background: transparent;
+			border: none;
 			outline: none;
+		}
+		.message-input::placeholder {
+			text-align: center;
 		}
 	}
 </style>
