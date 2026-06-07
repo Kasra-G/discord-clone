@@ -3,14 +3,13 @@
 	import { getChannel, getMessages, sendMessage } from '$lib/backend.remote';
 	import { messageService } from '$lib/message-service.svelte';
 	import { deep } from '$lib/util.svelte.js';
-	import { websocketService } from '$lib/websocket.svelte';
 	import { onMount } from 'svelte';
 	import * as schemas from '$lib/schemas';
 	import { showErrors } from '$lib/snippets.svelte';
 
 	let { params } = $props();
 
-	let inputField: HTMLElement;
+	let inputText = $state('');
 	let messages = $derived(deep(await getMessages({ channelId: params.channelId, count: 100 })));
 
 	beforeNavigate(({ to }) => {
@@ -22,6 +21,8 @@
 			}).refresh();
 		}
 	});
+
+	// todo message sending is very broken
 
 	onMount(() => {
 		return messageService.subscribeOnMessage((msg) => {
@@ -85,7 +86,7 @@
 		{...sendMessage.enhance(async (form) => {
 			if (await form.submit().updates()) {
 				form.element.reset();
-				inputField.focus();
+				inputText = '';
 			}
 		})}
 		oninput={() => sendMessage.validate()}
@@ -94,20 +95,22 @@
 		<div class="input-error-wrapper">
 			{@render showErrors(sendMessage.fields.message)}
 		</div>
-		<textarea
-			{...sendMessage.fields.message.as('text')}
+		<div
+			tabindex="0"
+			role="textbox"
+			contenteditable="true"
 			class="message-input"
-			autocomplete="off"
-			disabled={websocketService.status !== 'CONNECTED'}
-			placeholder="Type a message..."
-			bind:this={inputField}
-			onkeydown={async (e) => {
+			placeholder={`Message #${(await getChannelDetails()).name}`}
+			bind:innerText={() => inputText, (e) => (inputText = e === '\n' ? '' : e)}
+			onkeydown={(e) => {
 				if (e.key === 'Enter' && !e.shiftKey) {
 					e.preventDefault();
-					await sendMessage.submit();
+					sendMessage.element?.requestSubmit();
+					e.currentTarget.focus();
 				}
 			}}
-		></textarea>
+		></div>
+		<input {...sendMessage.fields.message.as('hidden', inputText.trim())} />
 		<input {...sendMessage.fields.channelId.as('hidden', params.channelId)} />
 	</form>
 </div>
@@ -182,28 +185,29 @@
 		flex-direction: column;
 
 		.message-input {
+			border: 1px solid var(--accent);
 			color: var(--foreground);
-			flex-grow: 1;
-			min-height: 44px;
+			min-height: 56px;
+			padding: 12px 12px 8px 20px;
 			max-height: 200px;
+			field-sizing: content;
 
-			padding: 12px;
 			border-radius: 12px;
 			background-color: var(--input);
 			margin: 8px;
 
 			font-size: medium;
-		}
-
-		textarea {
-			font-family: inherit;
-			resize: none;
-			background: transparent;
-			border: none;
+			overflow-y: scroll;
 			outline: none;
 		}
-		.message-input::placeholder {
-			text-align: center;
+		div[contenteditable='true'] {
+			&[placeholder]:empty::before {
+				content: attr(placeholder);
+				color: var(--muted-foreground);
+				cursor: text;
+				word-break: break-all;
+				user-select: none;
+			}
 		}
 	}
 </style>
