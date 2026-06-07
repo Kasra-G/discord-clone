@@ -5,5 +5,5 @@ import { resolve } from '$app/paths';
 
 export const load: PageLoad = async ({ params }) => {
 	const channels = await getChannels({ guildId: params.guildId });
-	redirect(308, resolve(`/guilds/${params.guildId}/channels/${channels[0].id}`));
+	redirect(308, resolve(`/channels/${params.guildId}/${channels[0].id}`));
 };

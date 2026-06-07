@@ -34,7 +34,8 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 
 export const handle: Handle = async ({ resolve, event }) => {
 	const refresh_token = event.cookies.get('refresh_token');
-	const authenticated = await getAuthenticated();
+	const access_token = event.cookies.get('access_token');
+	const authenticated = !!access_token;
 
 	event.locals.authenticated = authenticated;
 	if (!authenticated && refresh_token) {

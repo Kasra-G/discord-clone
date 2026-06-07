@@ -49,7 +49,7 @@
 		{/if}
 
 		{@render navbarButton(resolve('/profile'), 'Profile')}
-		{@render navbarButton(resolve(`/guilds/${DEFAULT_GUILD}`), 'Chat')}
+		{@render navbarButton(resolve(`/channels/${DEFAULT_GUILD}`), 'Chat')}
 	</div>
 
 	<div class="body">

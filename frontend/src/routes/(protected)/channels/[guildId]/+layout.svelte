@@ -5,7 +5,6 @@
 	import { DEFAULT_GUILD } from '$lib/const';
 	import type { Channel } from '$lib/model';
 	import { getUserState } from '$lib/user.svelte';
-	import { websocketService } from '$lib/websocket.svelte';
 
 	let { params, children } = $props();
 
@@ -19,7 +18,7 @@
 	<div class="channel-entry-container">
 		<a
 			class="channel-entry text-overflow"
-			href={resolve(`/guilds/${DEFAULT_GUILD}/channels/${channel.id}`)}
+			href={resolve(`/channels/${DEFAULT_GUILD}/${channel.id}`)}
 			class:selected={page.params.channelId === channel.id}>#{channel.name}</a
 		>
 	</div>
