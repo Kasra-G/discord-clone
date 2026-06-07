@@ -17,6 +17,6 @@ export function getLoginRedirectUrl(returnPath: string) {
 }
 
 export const deep = <T>(arr: T): T => {
-	let _ = $state(arr);
+	const _ = $state(arr);
 	return _;
 };

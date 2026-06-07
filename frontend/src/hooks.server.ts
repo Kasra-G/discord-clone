@@ -1,4 +1,3 @@
-import { getAuthenticated } from '$lib/backend.remote';
 import * as schemas from '$lib/schemas';
 import type { Handle, HandleFetch } from '@sveltejs/kit';
 import { parseSetCookie } from 'set-cookie-parser';

@@ -35,8 +35,9 @@
 	let scroller = $state<DOMRect>();
 	let autoscroll = $state(true);
 	const autoscrollToLast = (elem: HTMLElement) => {
-		scroller?.width;
-		scroller?.height;
+		if (!scroller) return;
+		if (scroller.width <= 0) return;
+		if (scroller.height <= 0) return;
 		if (messages.length <= 0) return;
 		if (!autoscroll) return;
 		elem.lastElementChild?.scrollIntoView();
