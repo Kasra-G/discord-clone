@@ -9,4 +9,7 @@ sealed class ServiceException(
 ) : Exception(message, cause) {
   data class Unauthorized(override val message: String, override val cause: Throwable? = null) :
       ServiceException(HttpStatusCode.Unauthorized, message, cause)
+
+  data class NotFound(override val message: String, override val cause: Throwable? = null) :
+      ServiceException(HttpStatusCode.NotFound, message, cause)
 }

@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { getChannels } from '$lib/backend.remote';
+	import { createChannel, getChannels } from '$lib/backend.remote';
 	import { DEFAULT_GUILD } from '$lib/const';
+	import * as schemas from '$lib/schemas';
 	import type { Channel } from '$lib/model';
 	import Modal from './Modal.svelte';
 
-	let channels = $derived(await getChannels({ guildId: page.params.guildId! }));
+	let guildId = $derived(page.params.guildId!);
+
+	let channels = $derived(await getChannels({ guildId }));
 	let showModal = $state(false);
 </script>
 
@@ -24,7 +27,25 @@
 {/snippet}
 
 <Modal bind:showModal>
-	<div style="color: var(--foreground); width: 400px; height: 400px; ">bolla</div>
+	<form
+		{...createChannel.preflight(schemas.CREATE_CHANNEL)}
+		{...createChannel.enhance(async (form) => {
+			if (await form.submit()) {
+				form.element.reset();
+				showModal = false;
+			}
+		})}
+		style="color: var(--foreground);"
+	>
+		<label>
+			Channel name <input {...createChannel.fields.channelName.as('text')} />
+		</label>
+		<label>
+			Channel description <input {...createChannel.fields.channelDescription.as('text')} />
+		</label>
+		<input {...createChannel.fields.guildId.as('hidden', guildId)} />
+		<button>Submit</button>
+	</form>
 </Modal>
 
 <div class="root">
@@ -34,7 +55,6 @@
 		<button
 			class="channel-group-add"
 			onclick={() => {
-				console.log('yo');
 				showModal = true;
 			}}>+</button
 		>

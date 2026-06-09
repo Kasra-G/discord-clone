@@ -1,10 +1,10 @@
 package com.ghkasra.discordclone
 
 import at.favre.lib.crypto.bcrypt.BCrypt
+import com.ghkasra.discordclone.model.ServiceException
 import com.ghkasra.discordclone.repository.ChannelId
 import com.ghkasra.discordclone.repository.DeviceId
 import com.ghkasra.discordclone.repository.MessageRepository
-import com.ghkasra.discordclone.repository.Messages.channelId
 import com.ghkasra.discordclone.repository.RefreshTokenRepository
 import com.ghkasra.discordclone.repository.UserCredentialRepository
 import com.ghkasra.discordclone.repository.UserId
@@ -33,6 +33,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import java.security.MessageDigest
+import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
@@ -67,22 +68,25 @@ fun Application.configureRouting() {
       )
 
   val channels =
-      listOf(
-          Channel(
-              "0238942309",
-              name = "general",
-              description = "a general channel",
-          ),
-          Channel(
-              "539230957",
-              name = "gaming",
-              description = "a gaming channel",
-          ),
-          Channel(
-              "043510983451",
-              name = "announcements",
-              description = "an announcements channel",
-          ),
+      mutableMapOf(
+          "default" to
+              mutableListOf(
+                  Channel(
+                      "0238942309",
+                      name = "general",
+                      description = "a general channel",
+                  ),
+                  Channel(
+                      "539230957",
+                      name = "gaming",
+                      description = "a gaming channel",
+                  ),
+                  Channel(
+                      "043510983451",
+                      name = "announcements",
+                      description = "an announcements channel",
+                  ),
+              )
       )
 
   context(log) {
@@ -128,32 +132,64 @@ fun Application.configureRouting() {
                 "Hello, ${userDetails.username}! Token expires in ${expiresIn.toString(DurationUnit.MILLISECONDS)} ms."
             )
           }
-          route("/guilds/{guildId}") {
-            get("/channels") { call.respond(HttpStatusCode.OK, channels) }
-          }
-          get("/channels/{channelId}") {
-            val channel = channels.find { it.id == call.requirePathParameter("channelId") }
-            requireNotNull(channel) { "Invalid channelId $channelId" }
-            call.respond(HttpStatusCode.OK, channel)
-          }
-          post("/channels/{channelId}/messages") {
-            val request = call.receive<CreateMessageRequest>()
-            val claims = call.retrieveAuthenticatedClaims()
-            val message =
-                msgRepo.save(
-                    channelId = request.channelId,
-                    content = request.message,
-                    authorId = claims.userId,
-                )
-            launch { socketService.sendChannelMessage(message) }
-            call.respond(HttpStatusCode.Created)
-          }
-          get("/channels/{channelId}/messages") {
-            val channelId = ChannelId(call.requirePathParameter("channelId"))
-            val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
-            require(count > -1) { "Count must be positive" }
-            require(count <= 100) { "Count must be less than equal to 100" }
-            call.respond(msgRepo.listMessages(channelId, count))
+          route("/channels/{guildId}") {
+            get {
+              val guildId = call.requirePathParameter("guildId")
+              if (guildId !in channels) {
+                throw ServiceException.NotFound("Invalid guild ID: $guildId")
+              }
+              call.respond(HttpStatusCode.OK, channels[guildId]!!)
+            }
+            post {
+              val guildId = call.requirePathParameter("guildId")
+              if (guildId !in channels) {
+                throw ServiceException.NotFound("Invalid guild ID: $guildId")
+              }
+              val request = call.receive<ChannelCreateRequest>()
+              val channel =
+                  Channel(
+                      id = Random.nextInt().toString(),
+                      name = request.name,
+                      description = request.description,
+                  )
+              channels[guildId]!!.add(channel)
+              call.respond(HttpStatusCode.Created)
+            }
+
+            route("/{channelId}") {
+              get {
+                val guildId = call.requirePathParameter("guildId")
+                val channelId = call.requirePathParameter("channelId")
+                if (guildId !in channels) {
+                  throw ServiceException.NotFound("Invalid guild ID: $guildId")
+                }
+                val channel =
+                    channels[guildId]!!.find { it.id == channelId }
+                        ?: throw ServiceException.NotFound("Invalid channel ID: $channelId")
+                call.respond(HttpStatusCode.OK, channel)
+              }
+              post("/messages") {
+                val guildId = call.requirePathParameter("guildId")
+                val request = call.receive<CreateMessageRequest>()
+                val claims = call.retrieveAuthenticatedClaims()
+                val message =
+                    msgRepo.save(
+                        channelId = request.channelId,
+                        content = request.message,
+                        authorId = claims.userId,
+                    )
+                launch { socketService.sendChannelMessage(message) }
+                call.respond(HttpStatusCode.Created)
+              }
+              get("/messages") {
+                val guildId = call.requirePathParameter("guildId")
+                val channelId = ChannelId(call.requirePathParameter("channelId"))
+                val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
+                require(count > -1) { "Count must be positive" }
+                require(count <= 100) { "Count must be less than equal to 100" }
+                call.respond(msgRepo.listMessages(channelId, count))
+              }
+            }
           }
         }
       }
@@ -167,6 +203,12 @@ fun Application.configureRouting() {
     }
   }
 }
+
+@Serializable
+data class ChannelCreateRequest(
+    val name: String,
+    val description: String,
+)
 
 @Serializable
 data class Channel(

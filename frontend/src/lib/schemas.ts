@@ -2,6 +2,7 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import z from 'zod';
 
 export const GET_MESSAGES = z.object({
+	guildId: z.string().nonempty(),
 	channelId: z.string(),
 	count: z.number().positive().lte(100)
 });
@@ -34,6 +35,7 @@ export const LOGIN = z.object({
 });
 
 export const SEND_MESSAGE = z.object({
+	guildId: z.string().nonempty(),
 	message: z.string().nonempty(' ').max(255, 'Message too long'),
 	channelId: z.string().nonempty()
 });
@@ -43,7 +45,14 @@ export const GET_CHANNELS = z.object({
 });
 
 export const GET_CHANNEL = z.object({
+	guildId: z.string().nonempty(),
 	channelId: z.string().nonempty()
+});
+
+export const CREATE_CHANNEL = z.object({
+	channelName: z.string().nonempty(),
+	channelDescription: z.string(),
+	guildId: z.string().nonempty()
 });
 
 export interface UserDetails {

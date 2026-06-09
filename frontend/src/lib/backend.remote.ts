@@ -13,7 +13,7 @@ export const getMotd = query(async () => {
 
 export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
 	const event = getRequestEvent();
-	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
+	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${guildId}`, {
 		method: 'GET'
 	});
 
@@ -21,14 +21,38 @@ export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
 	return channels;
 });
 
-export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
+export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId, guildId }) => {
 	const event = getRequestEvent();
-	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}`, {
+	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${guildId}/${channelId}`, {
 		method: 'GET'
 	});
 
 	return (await response.json()) as Channel;
 });
+
+export const createChannel = form(
+	schemas.CREATE_CHANNEL,
+	async ({ channelName, channelDescription, guildId }) => {
+		const event = getRequestEvent();
+		const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${guildId}`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				name: channelName,
+				description: channelDescription
+			})
+		});
+
+		if (response.ok) {
+			void getChannels({ guildId }).refresh();
+		}
+
+		return {
+			ok: response.ok,
+			error: !response.ok ? (await response.json()).error : undefined
+		};
+	}
+);
 
 export const logout = form(async () => {
 	const event = getRequestEvent();
@@ -42,13 +66,16 @@ export const logout = form(async () => {
 	redirect(308, '/');
 });
 
-export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
+export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId, guildId }) => {
 	const event = getRequestEvent();
-	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
-		method: 'POST',
-		body: JSON.stringify({ message: message, channelId: channelId }),
-		headers: { 'content-type': 'application/json' }
-	});
+	const res = await event.fetch(
+		`${schemas.BASE_API_URL}/channels/${guildId}/${channelId}/messages`,
+		{
+			method: 'POST',
+			body: JSON.stringify({ message: message, channelId: channelId }),
+			headers: { 'content-type': 'application/json' }
+		}
+	);
 	return {
 		ok: res.ok,
 		error: !res.ok
@@ -70,10 +97,10 @@ export const getAuthenticated = query(async () => {
 	return !!access_token;
 });
 
-export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {
+export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, guildId, count }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(
-		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`
+		`${schemas.BASE_API_URL}/channels/${guildId}/${channelId}/messages?count=${count}`
 	);
 	const messages = (await response.json()) as Message[];
 	return messages.toReversed();
