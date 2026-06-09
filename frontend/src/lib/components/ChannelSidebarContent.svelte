@@ -23,6 +23,10 @@
 
 <div class="root">
 	<h3 class="text-overflow">JuanDaSwancord</h3>
+	<div class="channel-group">
+		<span class="channel-group-name text-overflow">Text Channels</span>
+		<button class="channel-group-add">+</button>
+	</div>
 	<div class="channel-list">
 		{#each channels as channel (channel.id)}
 			{@render channelButton(channel)}
@@ -31,10 +35,36 @@
 </div>
 
 <style>
+	.channel-group {
+		color: var(--muted-foreground);
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+
+		.channel-group-name {
+			font-size: smaller;
+			flex-grow: 1;
+		}
+
+		.channel-group-add {
+			font-size: x-large;
+			color: inherit;
+			background: inherit;
+			border: inherit;
+			cursor: inherit;
+		}
+		.channel-group-add:hover {
+			color: var(--accent-foreground);
+		}
+
+		.channel-group-name:hover {
+			color: var(--accent-foreground);
+		}
+	}
 	.root {
 		height: 100%;
 		margin: 4px;
-		padding-left: 4px;
+		padding: 0 8px 16px 8px;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
@@ -56,7 +86,6 @@
 		gap: 4px;
 		flex-grow: 1;
 		overflow-y: auto;
-		padding: 0 8px 16px 8px;
 	}
 
 	.channel-link {
