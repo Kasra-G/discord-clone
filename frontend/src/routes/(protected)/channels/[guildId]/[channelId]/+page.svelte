@@ -144,7 +144,7 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		min-height: 0;
+		min-height: 100%;
 	}
 
 	.message {
@@ -201,13 +201,13 @@
 			font-size: medium;
 			overflow-y: scroll;
 			outline: none;
+			word-break: break-all;
 		}
 		div[contenteditable='true'] {
 			&[placeholder]:empty::before {
 				content: attr(placeholder);
 				color: var(--muted-foreground);
 				cursor: text;
-				word-break: break-all;
 				user-select: none;
 			}
 		}
