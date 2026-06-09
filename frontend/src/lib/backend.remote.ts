@@ -1,7 +1,7 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
-import type { LoginFormResponse, Message } from './model';
+import type { Channel, LoginFormResponse, Message } from './model';
 import * as schemas from './schemas';
 import { invalid, redirect } from '@sveltejs/kit';
 import { redirectLogin } from './util.svelte';
@@ -11,8 +11,26 @@ export const getMotd = query(async () => {
 	return await response.text();
 });
 
+export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
+		method: 'GET'
+	});
+
+	const channels = (await response.json()) as Channel[];
+	return channels;
+});
+
+export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}`, {
+		method: 'GET'
+	});
+
+	return (await response.json()) as Channel;
+});
+
 export const logout = form(async () => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	await event.fetch(`${schemas.BASE_API_URL}/auth/revoke`, {
 		method: 'POST',
@@ -20,42 +38,48 @@ export const logout = form(async () => {
 	});
 	event.cookies.delete('refresh_token', { path: '/' });
 	event.cookies.delete('access_token', { path: '/' });
+	void getAuthenticated().refresh();
 	redirect(308, '/');
 });
 
 export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
-	await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
+	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
 		method: 'POST',
 		body: JSON.stringify({ message: message, channelId: channelId }),
 		headers: { 'content-type': 'application/json' }
 	});
+	return {
+		ok: res.ok,
+		error: !res.ok
+	};
 });
 
 export const checkAuthenticated = query(async () => {
 	const event = getRequestEvent();
 
-	if (!getAuthenticated()) {
+	if (!(await getAuthenticated())) {
 		redirectLogin(event.url.pathname);
 	}
 });
 
 export const getAuthenticated = query(async () => {
-	return getRequestEvent().locals.authenticated;
+	const event = getRequestEvent();
+	const access_token = event.cookies.get('access_token');
+
+	return !!access_token;
 });
 
 export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 	const response = await event.fetch(
 		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`
 	);
-	return (await response.json()) as Message[];
+	const messages = (await response.json()) as Message[];
+	return messages.toReversed();
 });
 
 export const register = form(schemas.REGISTER, async (data, issue) => {
-	checkAuthenticated();
 	const event = getRequestEvent();
 
 	const response = await event.fetch(`${schemas.BASE_API_URL}/users/register`, {
@@ -101,6 +125,7 @@ export const login = form(
 			event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
 		});
 
+		void getAuthenticated().refresh();
 		return { ok: true, user: body.user };
 	}
 );

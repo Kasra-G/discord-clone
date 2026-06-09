@@ -4,6 +4,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 import com.ghkasra.discordclone.repository.ChannelId
 import com.ghkasra.discordclone.repository.DeviceId
 import com.ghkasra.discordclone.repository.MessageRepository
+import com.ghkasra.discordclone.repository.Messages.channelId
 import com.ghkasra.discordclone.repository.RefreshTokenRepository
 import com.ghkasra.discordclone.repository.UserCredentialRepository
 import com.ghkasra.discordclone.repository.UserId
@@ -43,7 +44,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 
 fun Application.configureRouting() {
   install(IgnoreTrailingSlash)
-  val db = Database.connect(getEnvOrThrow("DATABASE_URL"))
+  val db = Database.connect(Environment.DATABASE_URL)
   val msgRepo = MessageRepository(db)
   val userRepo = UserRepository(db)
   val refreshTokenRepo = RefreshTokenRepository(db)
@@ -63,6 +64,25 @@ fun Application.configureRouting() {
   val socketService =
       SocketService(
           userRepository = userRepo,
+      )
+
+  val channels =
+      listOf(
+          Channel(
+              "0238942309",
+              name = "general",
+              description = "a general channel",
+          ),
+          Channel(
+              "539230957",
+              name = "gaming",
+              description = "a gaming channel",
+          ),
+          Channel(
+              "043510983451",
+              name = "announcements",
+              description = "an announcements channel",
+          ),
       )
 
   context(log) {
@@ -108,6 +128,14 @@ fun Application.configureRouting() {
                 "Hello, ${userDetails.username}! Token expires in ${expiresIn.toString(DurationUnit.MILLISECONDS)} ms."
             )
           }
+          route("/guilds/{guildId}") {
+            get("/channels") { call.respond(HttpStatusCode.OK, channels) }
+          }
+          get("/channels/{channelId}") {
+            val channel = channels.find { it.id == call.requirePathParameter("channelId") }
+            requireNotNull(channel) { "Invalid channelId $channelId" }
+            call.respond(HttpStatusCode.OK, channel)
+          }
           post("/channels/{channelId}/messages") {
             val request = call.receive<CreateMessageRequest>()
             val claims = call.retrieveAuthenticatedClaims()
@@ -139,6 +167,15 @@ fun Application.configureRouting() {
     }
   }
 }
+
+@Serializable
+data class Channel(
+    val id: String,
+    val name: String,
+    val description: String,
+    val updatedAt: Instant = Clock.System.now(),
+    val createdAt: Instant = Clock.System.now(),
+)
 
 data class UserClaims(val userId: UserId, val expiresAt: Instant)
 

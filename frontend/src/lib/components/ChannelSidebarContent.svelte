@@ -1,0 +1,91 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { getChannels } from '$lib/backend.remote';
+	import { DEFAULT_GUILD } from '$lib/const';
+	import type { Channel } from '$lib/model';
+
+	let channels = $derived(await getChannels({ guildId: page.params.guildId! }));
+</script>
+
+{#snippet channelButton(channel: Channel)}
+	<div class="channel-row-wrapper">
+		<a
+			class="channel-link"
+			href={resolve(`/channels/${DEFAULT_GUILD}/${channel.id}`)}
+			class:selected={page.params.channelId === channel.id}
+		>
+			<span>#</span>
+			<span class="text-overflow">{channel.name}</span>
+		</a>
+	</div>
+{/snippet}
+
+<div class="root">
+	<h3 class="text-overflow">JuanDaSwancord</h3>
+	<div class="channel-list">
+		{#each channels as channel (channel.id)}
+			{@render channelButton(channel)}
+		{/each}
+	</div>
+</div>
+
+<style>
+	.root {
+		height: 100%;
+		margin: 4px;
+		padding-left: 4px;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.channel-row-wrapper {
+		width: 100%;
+	}
+
+	h3 {
+		margin: 12px 8px;
+		flex-shrink: 0;
+		color: var(--foreground);
+	}
+
+	.channel-list {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		flex-grow: 1;
+		overflow-y: auto;
+		padding: 0 8px 16px 8px;
+	}
+
+	.channel-link {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 6px 8px;
+		border-radius: 8px;
+		transition: background-color 0.1s ease;
+	}
+
+	.text-overflow {
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+
+	a {
+		display: block;
+		text-decoration: none;
+		color: var(--muted-foreground);
+	}
+	a:hover {
+		background-color: var(--accent);
+		color: var(--accent-foreground);
+	}
+	a.selected {
+		background-color: var(--accent);
+		color: var(--foreground);
+		font-weight: 500;
+	}
+</style>

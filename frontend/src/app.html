@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,58 +13,113 @@
 
 <style>
 	:root {
-		/* Discord Primary Colors */
-		--blurple: #5865f2;
-		--dark-bg: #202225;
-		--chat-bg: #313338;
-		--darker-bg: #111214;
+		/* Discord uses sharper, more square corners */
+		--radius: 0.375rem; /* 6px */
 
-		--header-primary: #f2f3f5;
-		--header-secondary: #b5bac1;
-		--text-normal: #dbdee1;
-		--text-muted: #949ba4;
+		/* --- LIGHT THEME (Discord Light Mode) --- */
+		--background: oklch(1 0 0); /* #ffffff - Main Chat */
+		--foreground: oklch(0.25 0.01 240); /* #2e3338 - Main Text */
 
-		--green: #23a55a;
-		--yellow: #f2b433;
-		--red: #da373c;
+		--card: oklch(0.96 0.01 240); /* #f2f3f5 - Secondary panels */
+		--card-foreground: oklch(0.25 0.01 240);
 
-		--background-primary: var(--dark-bg);
-		--background-secondary: var(--darker-bg);
-		--background-tertiary: var(--darker-bg);
-		--background-accent: var(--blurple);
+		--popover: oklch(1 0 0); /* #ffffff - Popups */
+		--popover-foreground: oklch(0.25 0.01 240);
+
+		/* Discord "Blurple" */
+		--primary: oklch(0.58 0.22 268); /* #5865F2 - Brand Blurple */
+		--primary-foreground: oklch(1 0 0); /* White text on blurple */
+
+		--secondary: oklch(0.92 0.01 240); /* #e3e5e8 */
+		--secondary-foreground: oklch(0.31 0.01 240); /* #4e5058 */
+
+		--muted: oklch(0.96 0.01 240); /* #f2f3f5 */
+		--muted-foreground: oklch(0.45 0.01 240); /* #747f8d */
+
+		--accent: oklch(0.92 0.01 240); /* #e3e5e8 */
+		--accent-foreground: oklch(0.21 0.01 240); /* #313338 */
+
+		/* Discord Red (Danger/Delete) */
+		--destructive: oklch(0.55 0.19 26); /* #DA373C - Danger Red */
+		--destructive-foreground: oklch(1 0 0);
+
+		--border: oklch(0.88 0.01 240); /* #e3e5e8 */
+		--input: oklch(0.92 0.01 240); /* #e3e5e8 */
+		--ring: oklch(0.58 0.22 268); /* Focus ring blurple */
+
+		/* Discord Status Colors (Online, Idle, DND, Streaming) */
+		--chart-1: oklch(0.62 0.17 143); /* #23A55A - Online Green */
+		--chart-2: oklch(0.74 0.16 71); /* #F0B232 - Idle Yellow */
+		--chart-3: oklch(0.53 0.19 27); /* #F23F43 - Do Not Disturb Red */
+		--chart-4: oklch(0.46 0.21 290); /* #593695 - Streaming Purple */
+		--chart-5: oklch(0.58 0.22 268); /* #5865F2 - Blurple */
+
+		/* Left sidebars in Light Mode */
+		--sidebar: oklch(0.94 0.01 240); /* #ebedef - Channels */
+		--sidebar-foreground: oklch(0.31 0.01 240); /* #4e5058 */
+		--sidebar-primary: oklch(0.58 0.22 268);
+		--sidebar-primary-foreground: oklch(1 0 0);
+		--sidebar-accent: oklch(0.88 0.01 240); /* #e3e5e8 - Hover state */
+		--sidebar-accent-foreground: oklch(0.06 0.01 240); /* #060607 */
+		--sidebar-border: oklch(0.88 0.01 240);
+		--sidebar-ring: oklch(0.58 0.22 268);
+	}
+
+	.dark {
+		/* --- DARK THEME (Discord Dark Mode) --- */
+		--background: oklch(0.27 0.01 242); /* #313338 - Chat Window */
+		--foreground: oklch(0.93 0.01 242); /* #dbdee1 - Message Text */
+
+		--card: oklch(0.23 0.01 242); /* #2b2d31 - Server Channels / Member list */
+		--card-foreground: oklch(0.8 0.01 242); /* #949ba4 - Muted Text */
+
+		--popover: oklch(0.15 0.01 242); /* #111214 - User Profile Popups / Context menus */
+		--popover-foreground: oklch(0.93 0.01 242);
+
+		--primary: oklch(0.58 0.22 268); /* #5865F2 - Brand Blurple */
+		--primary-foreground: oklch(1 0 0); /* White text */
+
+		--secondary: oklch(0.25 0.01 242); /* #2b2d31 */
+		--secondary-foreground: oklch(0.93 0.01 242);
+
+		--muted: oklch(0.23 0.01 242); /* #2b2d31 */
+		--muted-foreground: oklch(0.65 0.01 242); /* #949ba4 - Sidebar channel headers */
+
+		--accent: oklch(0.33 0.01 242); /* #35373c - Hover highlights */
+		--accent-foreground: oklch(0.98 0.01 242); /* #f2f3f5 */
+
+		--destructive: oklch(0.53 0.19 27); /* #F23F43 - Soft Red */
+		--destructive-foreground: oklch(1 0 0);
+
+		--border: oklch(0.21 0.01 242); /* #1f2023 - Divider lines */
+		--input: oklch(0.25 0.01 242); /* #2b2d31 - Chat input box */
+		--ring: oklch(0.58 0.22 268); /* Focus Blurple */
+
+		/* Sidebar-specific mappings for Dark Mode */
+		--sidebar: oklch(0.2 0.01 242); /* #1e1f22 - Leftmost Server List Bar */
+		--sidebar-foreground: oklch(0.8 0.01 242); /* #949ba4 */
+		--sidebar-primary: oklch(0.58 0.22 268);
+		--sidebar-primary-foreground: oklch(1 0 0);
+		--sidebar-accent: oklch(0.27 0.01 242); /* #313338 - Hover server item */
+		--sidebar-accent-foreground: oklch(1 0 0);
+		--sidebar-border: oklch(0.15 0.01 242); /* #111214 */
+		--sidebar-ring: oklch(0.58 0.22 268);
+	}
+
+	*,
+	::before,
+	::after {
+		box-sizing: border-box;
 	}
 
 	body {
 		margin: 0;
 		padding: 0;
-		background-color: var(--background-primary);
+		background-color: var(--background);
 		color: var(--text-normal);
 		font-size: large;
 		font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 		font-weight: 400; /* Regular body weight */
 		text-rendering: optimizeLegibility;
-	}
-
-	input {
-		background-color: var(--background-tertiary);
-		border-color: var(--background-secondary);
-		border-radius: 5px;
-		border-width: 2px;
-		padding: 2px;
-		color: var(--text-normal);
-	}
-
-	button {
-		background-color: var(--background-accent);
-		border-color: var(--background-secondary);
-		border-radius: 7px;
-		border-width: 2px;
-		padding: 2px;
-		cursor: pointer;
-	}
-
-	button:disabled {
-		background-color: var(--background-secondary);
-		cursor: default;
 	}
 </style>

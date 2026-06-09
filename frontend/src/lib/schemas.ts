@@ -34,8 +34,16 @@ export const LOGIN = z.object({
 });
 
 export const SEND_MESSAGE = z.object({
-	message: z.string().nonempty('').max(255, 'Message too long'),
-	channelId: z.string().default('default')
+	message: z.string().nonempty(' ').max(255, 'Message too long'),
+	channelId: z.string().nonempty()
+});
+
+export const GET_CHANNELS = z.object({
+	guildId: z.string().nonempty()
+});
+
+export const GET_CHANNEL = z.object({
+	channelId: z.string().nonempty()
 });
 
 export interface UserDetails {

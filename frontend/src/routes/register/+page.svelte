@@ -2,14 +2,8 @@
 	import { resolve } from '$app/paths';
 	import { register } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
-	import type { RemoteFormField, RemoteFormFieldValue } from '@sveltejs/kit';
+	import { showErrors } from '$lib/snippets.svelte';
 </script>
-
-{#snippet showErrors(field: RemoteFormField<RemoteFormFieldValue>)}
-	{#each field.issues() as issue, i (i)}
-		<div class="issue-text">{issue.message}</div>
-	{/each}
-{/snippet}
 
 <form {...register.preflight(schemas.REGISTER)} oninput={() => register.validate()}>
 	<h3>Register</h3>
@@ -38,9 +32,5 @@
 <style>
 	.login-text {
 		font-size: small;
-	}
-	.issue-text {
-		font-size: small;
-		color: var(--red);
 	}
 </style>
