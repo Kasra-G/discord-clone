@@ -4,8 +4,10 @@
 	import { getChannels } from '$lib/backend.remote';
 	import { DEFAULT_GUILD } from '$lib/const';
 	import type { Channel } from '$lib/model';
+	import Modal from './Modal.svelte';
 
 	let channels = $derived(await getChannels({ guildId: page.params.guildId! }));
+	let showModal = $state(false);
 </script>
 
 {#snippet channelButton(channel: Channel)}
@@ -21,11 +23,19 @@
 	</div>
 {/snippet}
 
+<Modal bind:showModal>Aye</Modal>
+
 <div class="root">
 	<h3 class="text-overflow">JuanDaSwancord</h3>
 	<div class="channel-group">
 		<span class="channel-group-name text-overflow">Text Channels</span>
-		<button class="channel-group-add">+</button>
+		<button
+			class="channel-group-add"
+			onclick={() => {
+				console.log('yo');
+				showModal = true;
+			}}>+</button
+		>
 	</div>
 	<div class="channel-list">
 		{#each channels as channel (channel.id)}
