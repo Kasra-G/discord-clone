@@ -23,7 +23,9 @@
 	</div>
 {/snippet}
 
-<Modal bind:showModal>Aye</Modal>
+<Modal bind:showModal>
+	<div style="color: var(--foreground); width: 400px; height: 400px; ">bolla</div>
+</Modal>
 
 <div class="root">
 	<h3 class="text-overflow">JuanDaSwancord</h3>
