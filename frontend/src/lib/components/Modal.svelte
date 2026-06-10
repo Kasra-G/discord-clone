@@ -1,5 +1,13 @@
 <script lang="ts">
-	let { showModal = $bindable(false), children } = $props();
+	import type { Snippet } from 'svelte';
+
+	let {
+		showModal = $bindable(false),
+		children
+	}: {
+		showModal: boolean;
+		children: Snippet;
+	} = $props();
 </script>
 
 <dialog
