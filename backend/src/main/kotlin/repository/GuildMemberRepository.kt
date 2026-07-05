@@ -39,7 +39,7 @@ object GuildMembers : CompositeIdTable("guild_members") {
 class GuildMemberRepository(val db: Database) {
 
   init {
-    transaction(db) { SchemaUtils.create(Guilds) }
+    transaction(db) { SchemaUtils.create(GuildMembers) }
   }
 
   fun listGuildMembers(guildId: GuildId): List<GuildMember> =
