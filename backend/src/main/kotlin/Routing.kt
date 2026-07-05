@@ -5,6 +5,7 @@ import com.ghkasra.discordclone.repository.ChannelId
 import com.ghkasra.discordclone.repository.ChannelRepository
 import com.ghkasra.discordclone.repository.DeviceId
 import com.ghkasra.discordclone.repository.GuildId
+import com.ghkasra.discordclone.repository.GuildMemberRepository
 import com.ghkasra.discordclone.repository.GuildRepository
 import com.ghkasra.discordclone.repository.MessageRepository
 import com.ghkasra.discordclone.repository.RefreshTokenRepository
@@ -50,6 +51,7 @@ fun Application.configureRouting() {
   val msgRepo = MessageRepository(db)
   val userRepo = UserRepository(db)
   val guildRepo = GuildRepository(db)
+  val guildMemberRepo = GuildMemberRepository(db)
   val channelRepo = ChannelRepository(db)
   val refreshTokenRepo = RefreshTokenRepository(db)
   val passwordUtil = PasswordUtil(BCrypt.withDefaults())
@@ -113,6 +115,7 @@ fun Application.configureRouting() {
                 "Hello, ${userDetails.username}! Token expires in ${expiresIn.toString(DurationUnit.MILLISECONDS)} ms."
             )
           }
+
           route("/guilds/{guildId}") {
             get {
               val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
@@ -122,21 +125,52 @@ fun Application.configureRouting() {
               val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
               call.respond(HttpStatusCode.OK, guildRepo.delete(guildId))
             }
-            get("/channels") {
-              val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
-              val channels = channelRepo.list(guildId)
-              call.respond(HttpStatusCode.OK, channels)
+
+            route("/channels") {
+              get {
+                val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                val channels = channelRepo.list(guildId)
+                call.respond(HttpStatusCode.OK, channels)
+              }
+              post {
+                val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                val createChannelRequest = call.receive<ChannelCreateRequest>()
+                val createdChannel =
+                    channelRepo.create(
+                        guildId = guildId,
+                        name = createChannelRequest.name,
+                        description = createChannelRequest.description,
+                    )
+                call.respond(HttpStatusCode.Created, createdChannel)
+              }
             }
-            post("/channels") {
-              val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
-              val createChannelRequest = call.receive<ChannelCreateRequest>()
-              val createdChannel =
-                  channelRepo.create(
-                      guildId = guildId,
-                      name = createChannelRequest.name,
-                      description = createChannelRequest.description,
-                  )
-              call.respond(HttpStatusCode.Created, createdChannel)
+
+            route("/members") {
+              get {
+                val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                val guildMembers = guildMemberRepo.list(guildId)
+                call.respond(HttpStatusCode.OK, guildMembers)
+              }
+              route("/{userId}") {
+                get {
+                  val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                  val userId = UserId(Uuid.parse(call.requirePathParameter("userId")))
+                  val guildMember = guildMemberRepo.get(guildId, userId)
+                  call.respond(HttpStatusCode.OK, guildMember)
+                }
+                post {
+                  val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                  val userId = UserId(Uuid.parse(call.requirePathParameter("userId")))
+                  val guildMember = guildMemberRepo.create(guildId, userId)
+                  call.respond(HttpStatusCode.OK, guildMember)
+                }
+                delete {
+                  val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                  val userId = UserId(Uuid.parse(call.requirePathParameter("userId")))
+                  guildMemberRepo.delete(guildId, userId)
+                  call.respond(HttpStatusCode.NoContent)
+                }
+              }
             }
           }
           route("/channels/{channelId}") {
@@ -144,24 +178,27 @@ fun Application.configureRouting() {
               val channelId = ChannelId(Uuid.parse(call.requirePathParameter("channelId")))
               call.respond(HttpStatusCode.OK, channelRepo.get(channelId))
             }
-            post("/messages") {
-              val request = call.receive<CreateMessageRequest>()
-              val claims = call.retrieveAuthenticatedClaims()
-              val message =
-                  msgRepo.save(
-                      channelId = request.channelId,
-                      content = request.message,
-                      authorId = claims.userId,
-                  )
-              launch { socketService.sendChannelMessage(message) }
-              call.respond(HttpStatusCode.Created)
-            }
-            get("/messages") {
-              val channelId = ChannelId(Uuid.parse(call.requirePathParameter("channelId")))
-              val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
-              require(count > -1) { "Count must be positive" }
-              require(count <= 100) { "Count must be less than equal to 100" }
-              call.respond(msgRepo.listMessages(channelId, count))
+
+            route("/messages") {
+              post {
+                val request = call.receive<CreateMessageRequest>()
+                val claims = call.retrieveAuthenticatedClaims()
+                val message =
+                    msgRepo.save(
+                        channelId = request.channelId,
+                        content = request.message,
+                        authorId = claims.userId,
+                    )
+                launch { socketService.sendChannelMessage(message) }
+                call.respond(HttpStatusCode.Created)
+              }
+              get {
+                val channelId = ChannelId(Uuid.parse(call.requirePathParameter("channelId")))
+                val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
+                require(count > -1) { "Count must be positive" }
+                require(count <= 100) { "Count must be less than equal to 100" }
+                call.respond(msgRepo.listMessages(channelId, count))
+              }
             }
           }
         }
