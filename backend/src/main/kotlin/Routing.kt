@@ -1,9 +1,11 @@
 package com.ghkasra.discordclone
 
 import at.favre.lib.crypto.bcrypt.BCrypt
-import com.ghkasra.discordclone.model.ServiceException
 import com.ghkasra.discordclone.repository.ChannelId
+import com.ghkasra.discordclone.repository.ChannelRepository
 import com.ghkasra.discordclone.repository.DeviceId
+import com.ghkasra.discordclone.repository.GuildId
+import com.ghkasra.discordclone.repository.GuildRepository
 import com.ghkasra.discordclone.repository.MessageRepository
 import com.ghkasra.discordclone.repository.RefreshTokenRepository
 import com.ghkasra.discordclone.repository.UserCredentialRepository
@@ -33,7 +35,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import java.security.MessageDigest
-import kotlin.random.Random
 import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
@@ -48,6 +49,8 @@ fun Application.configureRouting() {
   val db = Database.connect(Environment.DATABASE_URL)
   val msgRepo = MessageRepository(db)
   val userRepo = UserRepository(db)
+  val guildRepo = GuildRepository(db)
+  val channelRepo = ChannelRepository(db)
   val refreshTokenRepo = RefreshTokenRepository(db)
   val passwordUtil = PasswordUtil(BCrypt.withDefaults())
   val hashUtil = HashUtil(MessageDigest.getInstance("SHA-256"))
@@ -65,28 +68,6 @@ fun Application.configureRouting() {
   val socketService =
       SocketService(
           userRepository = userRepo,
-      )
-
-  val channels =
-      mutableMapOf(
-          "default" to
-              mutableListOf(
-                  Channel(
-                      "0238942309",
-                      name = "general",
-                      description = "a general channel",
-                  ),
-                  Channel(
-                      "539230957",
-                      name = "gaming",
-                      description = "a gaming channel",
-                  ),
-                  Channel(
-                      "043510983451",
-                      name = "announcements",
-                      description = "an announcements channel",
-                  ),
-              )
       )
 
   context(log) {
@@ -132,63 +113,55 @@ fun Application.configureRouting() {
                 "Hello, ${userDetails.username}! Token expires in ${expiresIn.toString(DurationUnit.MILLISECONDS)} ms."
             )
           }
-          route("/channels/{guildId}") {
+          route("/guilds/{guildId}") {
             get {
-              val guildId = call.requirePathParameter("guildId")
-              if (guildId !in channels) {
-                throw ServiceException.NotFound("Invalid guild ID: $guildId")
-              }
-              call.respond(HttpStatusCode.OK, channels[guildId]!!)
+              val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+              call.respond(HttpStatusCode.OK, guildRepo.get(guildId))
             }
-            post {
-              val guildId = call.requirePathParameter("guildId")
-              if (guildId !in channels) {
-                throw ServiceException.NotFound("Invalid guild ID: $guildId")
-              }
-              val request = call.receive<ChannelCreateRequest>()
-              val channel =
-                  Channel(
-                      id = Random.nextInt().toString(),
-                      name = request.name,
-                      description = request.description,
+            delete {
+              val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+              call.respond(HttpStatusCode.OK, guildRepo.delete(guildId))
+            }
+            get("/channels") {
+              val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+              val channels = channelRepo.list(guildId)
+              call.respond(HttpStatusCode.OK, channels)
+            }
+            post("/channels") {
+              val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+              val createChannelRequest = call.receive<ChannelCreateRequest>()
+              val createdChannel =
+                  channelRepo.create(
+                      guildId = guildId,
+                      name = createChannelRequest.name,
+                      description = createChannelRequest.description,
                   )
-              channels[guildId]!!.add(channel)
+              call.respond(HttpStatusCode.Created, createdChannel)
+            }
+          }
+          route("/channels/{channelId}") {
+            get {
+              val channelId = ChannelId(Uuid.parse(call.requirePathParameter("channelId")))
+              call.respond(HttpStatusCode.OK, channelRepo.get(channelId))
+            }
+            post("/messages") {
+              val request = call.receive<CreateMessageRequest>()
+              val claims = call.retrieveAuthenticatedClaims()
+              val message =
+                  msgRepo.save(
+                      channelId = request.channelId,
+                      content = request.message,
+                      authorId = claims.userId,
+                  )
+              launch { socketService.sendChannelMessage(message) }
               call.respond(HttpStatusCode.Created)
             }
-
-            route("/{channelId}") {
-              get {
-                val guildId = call.requirePathParameter("guildId")
-                val channelId = call.requirePathParameter("channelId")
-                if (guildId !in channels) {
-                  throw ServiceException.NotFound("Invalid guild ID: $guildId")
-                }
-                val channel =
-                    channels[guildId]!!.find { it.id == channelId }
-                        ?: throw ServiceException.NotFound("Invalid channel ID: $channelId")
-                call.respond(HttpStatusCode.OK, channel)
-              }
-              post("/messages") {
-                val guildId = call.requirePathParameter("guildId")
-                val request = call.receive<CreateMessageRequest>()
-                val claims = call.retrieveAuthenticatedClaims()
-                val message =
-                    msgRepo.save(
-                        channelId = request.channelId,
-                        content = request.message,
-                        authorId = claims.userId,
-                    )
-                launch { socketService.sendChannelMessage(message) }
-                call.respond(HttpStatusCode.Created)
-              }
-              get("/messages") {
-                val guildId = call.requirePathParameter("guildId")
-                val channelId = ChannelId(call.requirePathParameter("channelId"))
-                val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
-                require(count > -1) { "Count must be positive" }
-                require(count <= 100) { "Count must be less than equal to 100" }
-                call.respond(msgRepo.listMessages(channelId, count))
-              }
+            get("/messages") {
+              val channelId = ChannelId(Uuid.parse(call.requirePathParameter("channelId")))
+              val count = call.queryParameters["count"]?.toIntOrNull() ?: 10
+              require(count > -1) { "Count must be positive" }
+              require(count <= 100) { "Count must be less than equal to 100" }
+              call.respond(msgRepo.listMessages(channelId, count))
             }
           }
         }
@@ -208,15 +181,6 @@ fun Application.configureRouting() {
 data class ChannelCreateRequest(
     val name: String,
     val description: String,
-)
-
-@Serializable
-data class Channel(
-    val id: String,
-    val name: String,
-    val description: String,
-    val updatedAt: Instant = Clock.System.now(),
-    val createdAt: Instant = Clock.System.now(),
 )
 
 data class UserClaims(val userId: UserId, val expiresAt: Instant)
