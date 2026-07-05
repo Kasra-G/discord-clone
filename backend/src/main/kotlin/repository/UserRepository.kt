@@ -44,8 +44,9 @@ class UserRepository(val db: Database) {
   ) =
       transaction(db) {
         Users.updateReturning(where = { Users.id eq id.value }) {
-              username?.let { username -> it[Users.username] = username.value }
-              email?.let { email -> it[Users.email] = email.value }
+              username?.let { username -> it[this.username] = username.value }
+              email?.let { email -> it[this.email] = email.value }
+              it[this.updatedAt] = Clock.System.now()
             }
             .single()
             .toUser()

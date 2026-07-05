@@ -4,6 +4,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.UuidTable
@@ -15,8 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteReturning
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-
-@Serializable @JvmInline value class GuildId(val value: Uuid)
+import org.jetbrains.exposed.v1.jdbc.updateReturning
 
 @Serializable
 data class Channel(
@@ -29,7 +29,7 @@ data class Channel(
 )
 
 object Channels : UuidTable("channels", uuidVersion = UuidVersion.V7) {
-  val guildId = uuid("guild_id")
+  val guildId = reference("guild_id", Guilds.id, ReferenceOption.CASCADE)
   val name = text("name")
   val description = text("description")
   val createdAt = timestamp("created_at").clientDefault { Clock.System.now() }
@@ -46,7 +46,7 @@ class ChannelRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(Channels) }
   }
 
-  fun listChannels(guildId: GuildId): List<Channel> =
+  fun list(guildId: GuildId): List<Channel> =
       transaction(db) {
         Channels.selectAll()
             .where { Channels.guildId.eq(guildId.value) }
@@ -54,21 +54,25 @@ class ChannelRepository(val db: Database) {
             .toList()
       }
 
-  fun getChannel(guildId: GuildId, channelId: ChannelId): Channel =
+  fun get(channelId: ChannelId): Channel =
       transaction(db) {
-        Channels.selectAll()
-            .where { Channels.guildId.eq(guildId.value).and { Channels.id.eq(channelId.value) } }
+        Channels.selectAll().where { Channels.id.eq(channelId.value) }.single().toChannel()
+      }
+
+  fun update(channelId: ChannelId, name: String?, description: String?): Channel =
+      transaction(db) {
+        Channels.updateReturning(where = { Channels.id.eq(channelId.value) }) {
+              name?.let { name -> it[this.name] = name }
+              description?.let { description -> it[this.description] = description }
+              it[updatedAt] = Clock.System.now()
+            }
             .single()
             .toChannel()
       }
 
-  fun deleteChannel(guildId: GuildId, channelId: ChannelId): Channel =
+  fun delete(channelId: ChannelId): Channel =
       transaction(db) {
-        Channels.deleteReturning {
-              Channels.guildId.eq(guildId.value).and { Channels.id.eq(channelId.value) }
-            }
-            .single()
-            .toChannel()
+        Channels.deleteReturning { Channels.id.eq(channelId.value) }.single().toChannel()
       }
 
   fun create(guildId: GuildId, name: String, description: String): Channel =
@@ -90,7 +94,7 @@ fun ResultRow.toChannel() =
         updatedAt = get(Channels.updatedAt),
         name = get(Channels.name),
         description = get(Channels.description),
-        guildId = GuildId(get(Channels.guildId)),
+        guildId = GuildId(get(Channels.guildId).value),
     )
 
 @Serializable @JvmInline value class ChannelId(val value: Uuid) {}

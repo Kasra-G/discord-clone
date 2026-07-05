@@ -31,7 +31,7 @@ object Messages : UuidTable("messages", uuidVersion = UuidVersion.V7) {
   val createdAt = timestamp("created_at").clientDefault { Clock.System.now() }
   val updatedAt = timestamp("updated_at").clientDefault { Clock.System.now() }
   val authorId = reference("author_id", Users.id, ReferenceOption.RESTRICT)
-  val channelId = reference("channel_id", Channels.id, ReferenceOption.RESTRICT)
+  val channelId = reference("channel_id", Channels.id, ReferenceOption.CASCADE)
 }
 
 class MessageRepository(val db: Database) {
