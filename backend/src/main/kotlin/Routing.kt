@@ -148,7 +148,7 @@ fun Application.configureRouting() {
             route("/members") {
               get {
                 val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
-                val guildMembers = guildMemberRepo.list(guildId)
+                val guildMembers = guildMemberRepo.listGuildMembers(guildId)
                 call.respond(HttpStatusCode.OK, guildMembers)
               }
               route("/{userId}") {
@@ -201,6 +201,37 @@ fun Application.configureRouting() {
               }
             }
           }
+          route("/users") {
+            route("/@me") {
+              get {
+                val claims = call.retrieveAuthenticatedClaims()
+                val user = userRepo.get(claims.userId)
+                call.respond(HttpStatusCode.OK, user)
+              }
+              get("/guilds") {
+                val claims = call.retrieveAuthenticatedClaims()
+                val guilds = guildMemberRepo.listUserGuilds(claims.userId)
+                call.respond(HttpStatusCode.OK, guilds)
+              }
+              post("/guilds") {
+                val claims = call.retrieveAuthenticatedClaims()
+                val createGuildRequest = call.receive<CreateGuildRequest>()
+                val guild =
+                    guildRepo.create(
+                        claims.userId,
+                        name = createGuildRequest.name,
+                        description = createGuildRequest.description,
+                    )
+                guildMemberRepo.create(guild.id, claims.userId)
+                call.respond(HttpStatusCode.Created, guild)
+              }
+            }
+            get("{userId}") {
+              val userId = UserId(Uuid.parse(call.requirePathParameter("userId")))
+              val user = userRepo.get(userId)
+              call.respond(HttpStatusCode.OK, user)
+            }
+          }
         }
       }
       get("/") { call.respondText("Hello, World!") }
@@ -235,6 +266,8 @@ fun ApplicationCall.retrieveAuthenticatedClaims(): UserClaims {
       expiresAt = expiresAt.toInstant().toKotlinInstant(),
   )
 }
+
+@Serializable data class CreateGuildRequest(val name: String, val description: String)
 
 @Serializable data class CreateMessageRequest(val channelId: ChannelId, val message: String)
 

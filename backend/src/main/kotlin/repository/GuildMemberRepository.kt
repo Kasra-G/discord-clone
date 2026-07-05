@@ -1,6 +1,5 @@
 package com.ghkasra.discordclone.repository
 
-import com.ghkasra.discordclone.repository.Channels.updatedAt
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
@@ -43,12 +42,21 @@ class GuildMemberRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(Guilds) }
   }
 
-  fun list(guildId: GuildId): List<GuildMember> =
+  fun listGuildMembers(guildId: GuildId): List<GuildMember> =
       transaction(db) {
         (GuildMembers.innerJoin(Users))
             .selectAll()
             .where { GuildMembers.guildId.eq(guildId.value) }
             .map { it.toGuildMember() }
+            .toList()
+      }
+
+  fun listUserGuilds(userId: UserId): List<Guild> =
+      transaction(db) {
+        (GuildMembers.innerJoin(Guilds))
+            .selectAll()
+            .where { GuildMembers.userId eq userId.value }
+            .map { it.toGuild() }
             .toList()
       }
 

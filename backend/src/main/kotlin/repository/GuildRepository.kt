@@ -1,6 +1,5 @@
 package com.ghkasra.discordclone.repository
 
-import com.ghkasra.discordclone.repository.Channels.updatedAt
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -48,17 +47,17 @@ class GuildRepository(val db: Database) {
 
   fun list(ownerId: UserId): List<Guild> =
       transaction(db) {
-        Guilds.selectAll().where { Guilds.ownerId.eq(ownerId.value) }.map { it.toGuild() }.toList()
+        Guilds.selectAll().where { Guilds.ownerId eq ownerId.value }.map { it.toGuild() }.toList()
       }
 
   fun get(guildId: GuildId): Guild =
       transaction(db) {
-        Guilds.selectAll().where { Guilds.id.eq(guildId.value) }.single().toGuild()
+        Guilds.selectAll().where { Guilds.id eq guildId.value }.single().toGuild()
       }
 
   fun update(guildId: GuildId, name: String?, description: String?): Guild =
       transaction(db) {
-        Guilds.updateReturning(where = { Guilds.id.eq(guildId.value) }) {
+        Guilds.updateReturning(where = { Guilds.id eq guildId.value }) {
               name?.let { name -> it[this.name] = name }
               description?.let { description -> it[this.description] = description }
               it[updatedAt] = Clock.System.now()
@@ -70,7 +69,7 @@ class GuildRepository(val db: Database) {
   fun delete(guildId: GuildId): Guild =
       transaction(db) {
         Guilds.deleteReturning {
-              Guilds.id.eq(guildId.value)
+              Guilds.id eq guildId.value
             }
             .single()
             .toGuild()
