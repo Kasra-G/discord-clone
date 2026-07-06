@@ -18,20 +18,20 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 @Serializable
 data class Message(
+    val id: MessageId,
     val channelId: ChannelId,
     val content: String,
     val author: User,
-    val id: MessageId,
     val createdAt: Instant,
     val updatedAt: Instant,
 )
 
 object Messages : UuidTable("messages", uuidVersion = UuidVersion.V7) {
-  val channelId = text("channel_id")
   val content = text("content")
   val createdAt = timestamp("created_at").clientDefault { Clock.System.now() }
   val updatedAt = timestamp("updated_at").clientDefault { Clock.System.now() }
   val authorId = reference("author_id", Users.id, ReferenceOption.RESTRICT)
+  val channelId = reference("channel_id", Channels.id, ReferenceOption.CASCADE)
 }
 
 class MessageRepository(val db: Database) {
@@ -74,15 +74,7 @@ fun ResultRow.toMessage() =
         updatedAt = get(Messages.updatedAt),
         content = get(Messages.content),
         author = toUser(),
-        channelId = ChannelId(get(Messages.channelId)),
+        channelId = ChannelId(get(Messages.channelId).value),
     )
-
-@Serializable
-@JvmInline
-value class ChannelId(val value: String) {
-  companion object {
-    val DEFAULT = ChannelId("default")
-  }
-}
 
 @Serializable @JvmInline value class MessageId(val value: Uuid)
