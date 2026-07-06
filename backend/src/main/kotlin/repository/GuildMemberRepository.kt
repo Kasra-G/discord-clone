@@ -87,21 +87,20 @@ class GuildMemberRepository(val db: Database) {
             .single()
       }
 
-  fun create(guildId: GuildId, userId: UserId): GuildMember =
+  fun create(guildId: GuildId, userId: UserId): Unit =
       transaction(db) {
         GuildMembers.insertReturning {
               it[this.guildId] = guildId.value
               it[this.userId] = userId.value
             }
             .single()
-            .toGuildMember()
       }
 }
 
 fun ResultRow.toGuildMember() =
     GuildMember(
-        guildId = GuildId(get(Guilds.id).value),
+        guildId = GuildId(get(GuildMembers.guildId).value),
         user = toUser(),
-        createdAt = get(Guilds.createdAt),
-        updatedAt = get(Guilds.updatedAt),
+        createdAt = get(GuildMembers.createdAt),
+        updatedAt = get(GuildMembers.updatedAt),
     )

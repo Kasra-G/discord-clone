@@ -161,8 +161,8 @@ fun Application.configureRouting() {
                 post {
                   val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
                   val userId = UserId(Uuid.parse(call.requirePathParameter("userId")))
-                  val guildMember = guildMemberRepo.create(guildId, userId)
-                  call.respond(HttpStatusCode.OK, guildMember)
+                  guildMemberRepo.create(guildId, userId)
+                  call.respond(HttpStatusCode.NoContent)
                 }
                 delete {
                   val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
@@ -223,7 +223,14 @@ fun Application.configureRouting() {
                         description = createGuildRequest.description,
                     )
                 guildMemberRepo.create(guild.id, claims.userId)
+                channelRepo.create(guild.id, "welcome", "Default channel")
                 call.respond(HttpStatusCode.Created, guild)
+              }
+              post("/guilds/{guildId}/members") {
+                val claims = call.retrieveAuthenticatedClaims()
+                val guildId = GuildId(Uuid.parse(call.requirePathParameter("guildId")))
+                guildMemberRepo.create(guildId, claims.userId)
+                call.respond(HttpStatusCode.NoContent)
               }
             }
             get("{userId}") {
