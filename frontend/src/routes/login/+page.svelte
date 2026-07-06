@@ -24,7 +24,7 @@
 
 		if (form.result?.ok) {
 			form.element.reset();
-			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/channels/default/';
+			const redirectTo = page.url.searchParams.get('redirectTo') ?? '/channels/@me/';
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			await goto(redirectTo);
 		}

@@ -40,7 +40,20 @@ export const SEND_MESSAGE = z.object({
 	channelId: z.string().nonempty()
 });
 
-export const GET_CHANNELS = z.object({
+export const GET_GUILD_CHANNELS = z.object({
+	guildId: z.string().nonempty()
+});
+
+export const GET_GUILD = z.object({
+	guildId: z.string().nonempty()
+});
+
+export const SELF_CREATE_GUILD = z.object({
+	name: z.string().nonempty(),
+	description: z.string().nonempty()
+});
+
+export const SELF_JOIN_GUILD = z.object({
 	guildId: z.string().nonempty()
 });
 

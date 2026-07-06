@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import ChannelSidebarContent from '$lib/components/ChannelSidebarContent.svelte';
 	import ServerSidebar from '$lib/components/ServerSidebar.svelte';
 	import { getUserState } from '$lib/user.svelte';
@@ -37,7 +38,9 @@
 			sidepanelWidth = Math.max(160, Math.min(400, e.clientX - 72 - 2));
 		}}
 	></div>
-	<div class="sidebar-content"><ChannelSidebarContent /></div>
+	{#if page.params.guildId}
+		<div class="sidebar-content"><ChannelSidebarContent /></div>
+	{/if}
 	<div class="sidebar-profile">{getUserState().current?.username}</div>
 
 	<main class="content">

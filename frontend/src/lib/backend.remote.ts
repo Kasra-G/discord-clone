@@ -1,7 +1,7 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
-import type { Channel, LoginFormResponse, Message } from './model';
+import type { Channel, Guild, LoginFormResponse, Message } from './model';
 import * as schemas from './schemas';
 import { invalid, redirect } from '@sveltejs/kit';
 import { redirectLogin } from './util.svelte';
@@ -11,9 +11,9 @@ export const getMotd = query(async () => {
 	return await response.text();
 });
 
-export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
+export const getGuildChannels = query(schemas.GET_GUILD_CHANNELS, async ({ guildId }) => {
 	const event = getRequestEvent();
-	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${guildId}`, {
+	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
 		method: 'GET'
 	});
 
@@ -21,9 +21,53 @@ export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
 	return channels;
 });
 
-export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId, guildId }) => {
+export const getSelfGuilds = query(async () => {
 	const event = getRequestEvent();
-	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${guildId}/${channelId}`, {
+	const response = await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds`, {
+		method: 'GET'
+	});
+
+	const guilds = (await response.json()) as Guild[];
+	return guilds;
+});
+
+export const selfCreateGuild = form(schemas.SELF_CREATE_GUILD, async ({ name, description }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({
+			name: name,
+			description: description
+		})
+	});
+
+	const guilds = (await response.json()) as Guild;
+	return guilds;
+});
+
+export const selfJoinGuild = form(schemas.SELF_JOIN_GUILD, async ({ guildId }) => {
+	const event = getRequestEvent();
+	await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds/${guildId}/members`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({})
+	});
+});
+
+export const getGuild = query(schemas.GET_GUILD, async ({ guildId }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}`, {
+		method: 'GET'
+	});
+
+	const guilds = (await response.json()) as Guild;
+	return guilds;
+});
+
+export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}`, {
 		method: 'GET'
 	});
 
@@ -34,7 +78,7 @@ export const createChannel = form(
 	schemas.CREATE_CHANNEL,
 	async ({ channelName, channelDescription, guildId }) => {
 		const event = getRequestEvent();
-		const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${guildId}`, {
+		const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
@@ -44,7 +88,7 @@ export const createChannel = form(
 		});
 
 		if (response.ok) {
-			void getChannels({ guildId }).refresh();
+			void getGuildChannels({ guildId }).refresh();
 		}
 
 		return {
@@ -66,16 +110,13 @@ export const logout = form(async () => {
 	redirect(308, '/');
 });
 
-export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId, guildId }) => {
+export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelId }) => {
 	const event = getRequestEvent();
-	const res = await event.fetch(
-		`${schemas.BASE_API_URL}/channels/${guildId}/${channelId}/messages`,
-		{
-			method: 'POST',
-			body: JSON.stringify({ message: message, channelId: channelId }),
-			headers: { 'content-type': 'application/json' }
-		}
-	);
+	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
+		method: 'POST',
+		body: JSON.stringify({ message: message, channelId: channelId }),
+		headers: { 'content-type': 'application/json' }
+	});
 	return {
 		ok: res.ok,
 		error: !res.ok
@@ -97,10 +138,10 @@ export const getAuthenticated = query(async () => {
 	return !!access_token;
 });
 
-export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, guildId, count }) => {
+export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(
-		`${schemas.BASE_API_URL}/channels/${guildId}/${channelId}/messages?count=${count}`
+		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`
 	);
 	const messages = (await response.json()) as Message[];
 	return messages.toReversed();

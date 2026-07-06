@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { createChannel, getChannels } from '$lib/backend.remote';
-	import { DEFAULT_GUILD } from '$lib/const';
+	import { createChannel, getGuild, getGuildChannels } from '$lib/backend.remote';
 	import * as schemas from '$lib/schemas';
 	import type { Channel } from '$lib/model';
 	import Modal from './Modal.svelte';
 
 	let guildId = $derived(page.params.guildId!);
-
-	let channels = $derived(await getChannels({ guildId }));
+	let guildPromise = $derived(getGuild({ guildId }));
+	let channelsPromise = $derived(getGuildChannels({ guildId }));
 	let showModal = $state(false);
 </script>
 
@@ -17,7 +16,7 @@
 	<div class="channel-row-wrapper">
 		<a
 			class="channel-link"
-			href={resolve(`/channels/${DEFAULT_GUILD}/${channel.id}`)}
+			href={resolve(`/channels/${page.params.guildId}/${channel.id}`)}
 			class:selected={page.params.channelId === channel.id}
 		>
 			<span>#</span>
@@ -49,7 +48,7 @@
 </Modal>
 
 <div class="root">
-	<h3 class="text-overflow">JuanDaSwancord</h3>
+	<h3 class="text-overflow">{(await guildPromise).name}</h3>
 	<div class="channel-group">
 		<span class="channel-group-name text-overflow">Text Channels</span>
 		<button
@@ -60,7 +59,7 @@
 		>
 	</div>
 	<div class="channel-list">
-		{#each channels as channel (channel.id)}
+		{#each await channelsPromise as channel (channel.id)}
 			{@render channelButton(channel)}
 		{/each}
 	</div>

@@ -15,6 +15,15 @@ export interface Channel {
 	readonly description: string;
 }
 
+export interface Guild {
+	readonly id: string;
+	readonly ownerId: string;
+	readonly createdAt: string;
+	readonly updatedAt: string;
+	readonly name: string;
+	readonly description: string;
+}
+
 export interface User {
 	readonly id: string;
 	readonly createdAt: string;
