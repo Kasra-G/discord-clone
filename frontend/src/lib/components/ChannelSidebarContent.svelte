@@ -1,18 +1,22 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { getChannels } from '$lib/backend.remote';
-	import { DEFAULT_GUILD } from '$lib/const';
+	import { createChannel, getGuild, getGuildChannels } from '$lib/backend.remote';
+	import * as schemas from '$lib/schemas';
 	import type { Channel } from '$lib/model';
+	import Modal from './Modal.svelte';
 
-	let channels = $derived(await getChannels({ guildId: page.params.guildId! }));
+	let guildId = $derived(page.params.guildId!);
+	let guildPromise = $derived(getGuild({ guildId }));
+	let channelsPromise = $derived(getGuildChannels({ guildId }));
+	let showModal = $state(false);
 </script>
 
 {#snippet channelButton(channel: Channel)}
 	<div class="channel-row-wrapper">
 		<a
 			class="channel-link"
-			href={resolve(`/channels/${DEFAULT_GUILD}/${channel.id}`)}
+			href={resolve(`/channels/${page.params.guildId}/${channel.id}`)}
 			class:selected={page.params.channelId === channel.id}
 		>
 			<span>#</span>
@@ -21,20 +25,77 @@
 	</div>
 {/snippet}
 
+<Modal bind:showModal>
+	<form
+		{...createChannel.preflight(schemas.CREATE_CHANNEL)}
+		{...createChannel.enhance(async (form) => {
+			if (await form.submit()) {
+				form.element.reset();
+				showModal = false;
+			}
+		})}
+		style="color: var(--foreground);"
+	>
+		<label>
+			Channel name <input {...createChannel.fields.channelName.as('text')} />
+		</label>
+		<label>
+			Channel description <input {...createChannel.fields.channelDescription.as('text')} />
+		</label>
+		<input {...createChannel.fields.guildId.as('hidden', guildId)} />
+		<button>Submit</button>
+	</form>
+</Modal>
+
 <div class="root">
-	<h3 class="text-overflow">JuanDaSwancord</h3>
+	<h3 class="text-overflow">{(await guildPromise).name}</h3>
+	<div class="channel-group">
+		<span class="channel-group-name text-overflow">Text Channels</span>
+		<button
+			class="channel-group-add"
+			onclick={() => {
+				showModal = true;
+			}}>+</button
+		>
+	</div>
 	<div class="channel-list">
-		{#each channels as channel (channel.id)}
+		{#each await channelsPromise as channel (channel.id)}
 			{@render channelButton(channel)}
 		{/each}
 	</div>
 </div>
 
 <style>
+	.channel-group {
+		color: var(--muted-foreground);
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+
+		.channel-group-name {
+			font-size: smaller;
+			flex-grow: 1;
+		}
+
+		.channel-group-add {
+			font-size: x-large;
+			color: inherit;
+			background: inherit;
+			border: inherit;
+			cursor: inherit;
+		}
+		.channel-group-add:hover {
+			color: var(--accent-foreground);
+		}
+
+		.channel-group-name:hover {
+			color: var(--accent-foreground);
+		}
+	}
 	.root {
 		height: 100%;
 		margin: 4px;
-		padding-left: 4px;
+		padding: 0 8px 16px 8px;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
@@ -56,7 +117,6 @@
 		gap: 4px;
 		flex-grow: 1;
 		overflow-y: auto;
-		padding: 0 8px 16px 8px;
 	}
 
 	.channel-link {

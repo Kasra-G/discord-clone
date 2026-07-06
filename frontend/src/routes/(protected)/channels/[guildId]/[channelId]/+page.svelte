@@ -10,12 +10,16 @@
 	let { params } = $props();
 
 	let inputText = $state('');
-	let messages = $derived(deep(await getMessages({ channelId: params.channelId, count: 100 })));
+	let messages = $derived(
+		deep(await getMessages({ guildId: params.guildId, channelId: params.channelId, count: 100 }))
+	);
 
 	beforeNavigate(({ to }) => {
 		const channelId = to?.params?.channelId;
-		if (channelId) {
+		const guildId = to?.params?.guildId;
+		if (channelId && guildId) {
 			void getMessages({
+				guildId: guildId,
 				channelId: channelId,
 				count: 100
 			}).refresh();
@@ -44,7 +48,7 @@
 	};
 
 	const getChannelDetails = () => {
-		return getChannel({ channelId: params.channelId });
+		return getChannel({ guildId: params.guildId, channelId: params.channelId });
 	};
 </script>
 
@@ -113,6 +117,7 @@
 		></div>
 		<input {...sendMessage.fields.message.as('hidden', inputText.trim())} />
 		<input {...sendMessage.fields.channelId.as('hidden', params.channelId)} />
+		<input {...sendMessage.fields.guildId.as('hidden', params.guildId)} />
 	</form>
 </div>
 

@@ -1,7 +1,7 @@
 import { form, getRequestEvent, query } from '$app/server';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import { parseSetCookie } from 'set-cookie-parser';
-import type { Channel, LoginFormResponse, Message } from './model';
+import type { Channel, Guild, LoginFormResponse, Message } from './model';
 import * as schemas from './schemas';
 import { invalid, redirect } from '@sveltejs/kit';
 import { redirectLogin } from './util.svelte';
@@ -11,7 +11,7 @@ export const getMotd = query(async () => {
 	return await response.text();
 });
 
-export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
+export const getGuildChannels = query(schemas.GET_GUILD_CHANNELS, async ({ guildId }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
 		method: 'GET'
@@ -19,6 +19,50 @@ export const getChannels = query(schemas.GET_CHANNELS, async ({ guildId }) => {
 
 	const channels = (await response.json()) as Channel[];
 	return channels;
+});
+
+export const getSelfGuilds = query(async () => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds`, {
+		method: 'GET'
+	});
+
+	const guilds = (await response.json()) as Guild[];
+	return guilds;
+});
+
+export const selfCreateGuild = form(schemas.SELF_CREATE_GUILD, async ({ name, description }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({
+			name: name,
+			description: description
+		})
+	});
+
+	const guilds = (await response.json()) as Guild;
+	return guilds;
+});
+
+export const selfJoinGuild = form(schemas.SELF_JOIN_GUILD, async ({ guildId }) => {
+	const event = getRequestEvent();
+	await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds/${guildId}/members`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({})
+	});
+});
+
+export const getGuild = query(schemas.GET_GUILD, async ({ guildId }) => {
+	const event = getRequestEvent();
+	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}`, {
+		method: 'GET'
+	});
+
+	const guilds = (await response.json()) as Guild;
+	return guilds;
 });
 
 export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
@@ -29,6 +73,30 @@ export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
 
 	return (await response.json()) as Channel;
 });
+
+export const createChannel = form(
+	schemas.CREATE_CHANNEL,
+	async ({ channelName, channelDescription, guildId }) => {
+		const event = getRequestEvent();
+		const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				name: channelName,
+				description: channelDescription
+			})
+		});
+
+		if (response.ok) {
+			void getGuildChannels({ guildId }).refresh();
+		}
+
+		return {
+			ok: response.ok,
+			error: !response.ok ? (await response.json()).error : undefined
+		};
+	}
+);
 
 export const logout = form(async () => {
 	const event = getRequestEvent();

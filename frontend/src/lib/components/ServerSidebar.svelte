@@ -1,38 +1,66 @@
-<script>
+<script lang="ts">
 	import { resolve } from '$app/paths';
-	import { DEFAULT_GUILD } from '$lib/const';
+	import { getSelfGuilds, selfCreateGuild, selfJoinGuild } from '$lib/backend.remote';
+	import * as schemas from '$lib/schemas';
+	import type { Guild } from '$lib/model';
+	import { getUserState } from '$lib/user.svelte';
+	import Modal from './Modal.svelte';
 
 	let { class: className = '' } = $props();
+	let showCreateGuildModal = $state(false);
+	let showJoinGuildModal = $state(false);
 </script>
+
+{#snippet guildButton(guild: Guild)}
+	<li><a href={resolve(`/channels/${guild.id}/`)}>{guild.name}</a></li>
+{/snippet}
+
+<Modal bind:showModal={showCreateGuildModal}>
+	<form
+		{...selfCreateGuild.preflight(schemas.SELF_CREATE_GUILD)}
+		{...selfCreateGuild.enhance(async (form) => {
+			if (await form.submit()) {
+				form.element.reset();
+				showCreateGuildModal = false;
+			}
+		})}
+	>
+		<input
+			{...selfCreateGuild.fields.name.as('text', `${getUserState().current?.username}'s Server`)}
+		/>
+		<input
+			{...selfCreateGuild.fields.description.as(
+				'text',
+				`Server for ${getUserState().current?.username}`
+			)}
+		/>
+		<button> Submit </button>
+	</form>
+</Modal>
+
+<Modal bind:showModal={showJoinGuildModal}>
+	<form
+		{...selfJoinGuild.preflight(schemas.SELF_JOIN_GUILD)}
+		{...selfJoinGuild.enhance(async (form) => {
+			if (await form.submit()) {
+				form.element.reset();
+				showJoinGuildModal = false;
+			}
+		})}
+	>
+		<input {...selfJoinGuild.fields.guildId.as('text')} />
+		<button> Submit </button>
+	</form>
+</Modal>
 
 <aside class="root {className}">
 	<div class="scroll-wrapper">
 		<ol>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>a</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>a</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>a</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>a</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>a</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>b</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>c</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>d</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>e</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>b</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>c</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>d</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>e</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>b</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>c</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>d</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>e</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>b</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>c</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>d</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>e</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>b</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>c</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>d</a></li>
-			<li><a href={resolve(`/channels/${DEFAULT_GUILD}/`)}>e</a></li>
+			{#each await getSelfGuilds() as guild (guild.id)}
+				{@render guildButton(guild)}
+			{/each}
+			<li><button onclick={() => (showCreateGuildModal = true)}>Create</button></li>
+			<li><button onclick={() => (showJoinGuildModal = true)}>Join</button></li>
 		</ol>
 	</div>
 </aside>
