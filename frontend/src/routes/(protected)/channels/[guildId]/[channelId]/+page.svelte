@@ -87,8 +87,7 @@
 		</div>
 	</div>
 	<form
-		{...sendMessage.preflight(schemas.SEND_MESSAGE)}
-		{...sendMessage.enhance(async (form) => {
+		{...sendMessage.preflight(schemas.SEND_MESSAGE).enhance(async (form) => {
 			if (await form.submit().updates()) {
 				form.element.reset();
 				inputText = '';

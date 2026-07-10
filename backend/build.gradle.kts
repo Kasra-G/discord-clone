@@ -23,6 +23,7 @@ dependencies {
   implementation(ktorLibs.server.statusPages)
   implementation(ktorLibs.server.core)
   implementation(ktorLibs.server.cors)
+  implementation(ktorLibs.server.forwardedHeader)
   implementation(ktorLibs.server.netty)
   implementation(ktorLibs.server.websockets)
   implementation(ktorLibs.server.requestValidation)

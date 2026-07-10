@@ -1,4 +1,4 @@
-import { PUBLIC_BACKEND_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import z from 'zod';
 
 export const GET_MESSAGES = z.object({
@@ -76,4 +76,4 @@ export interface UserDetails {
 	readonly email: string;
 }
 
-export const BASE_API_URL = `${PUBLIC_BACKEND_URL}/api`;
+export const BASE_API_URL = `${env.PUBLIC_BACKEND_URL}/api`;

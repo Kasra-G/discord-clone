@@ -1,4 +1,4 @@
-import { PUBLIC_BACKEND_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 
 export interface Command {
 	command: string;
@@ -42,7 +42,7 @@ export class WebsocketService {
 
 		this._status = 'CONNECTING';
 
-		this.ws = new WebSocket(`${PUBLIC_BACKEND_URL}/ws`);
+		this.ws = new WebSocket(`${env.PUBLIC_BACKEND_URL}/ws`);
 
 		this.ws.addEventListener('open', () => {
 			this._status = 'CONNECTED';

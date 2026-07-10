@@ -92,8 +92,8 @@ class AuthenticationService(
   companion object {
     val REFRESH_TOKEN_DURATION = 7.toDuration(DurationUnit.DAYS)
     val ACCESS_TOKEN_DURATION = 5.toDuration(DurationUnit.MINUTES)
-    const val AUDIENCE = "http://localhost:5173"
-    const val ISSUER = "http://localhost:8080"
+    const val AUDIENCE = "http://localhost"
+    const val ISSUER = "http://localhost"
     const val REALM = "Ktor Server"
     const val ACCESS_TOKEN_COOKIE_NAME = "access_token"
     const val REFRESH_TOKEN_COOKIE_NAME = "refresh_token"
@@ -103,6 +103,7 @@ class AuthenticationService(
           name = REFRESH_TOKEN_COOKIE_NAME,
           value = tokens.refreshToken.value,
           httpOnly = true,
+          domain = Environment.DOMAIN,
           expires = Clock.System.now().plus(REFRESH_TOKEN_DURATION).toJavaInstant().toGMTDate(),
           path = "/",
       )
@@ -110,6 +111,7 @@ class AuthenticationService(
           name = ACCESS_TOKEN_COOKIE_NAME,
           value = tokens.accessToken.value,
           httpOnly = true,
+          domain = Environment.DOMAIN,
           expires = Clock.System.now().plus(ACCESS_TOKEN_DURATION).toJavaInstant().toGMTDate(),
           path = "/",
       )

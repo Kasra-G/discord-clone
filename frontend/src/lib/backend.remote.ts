@@ -1,5 +1,5 @@
 import { form, getRequestEvent, query } from '$app/server';
-import { PUBLIC_BACKEND_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { parseSetCookie } from 'set-cookie-parser';
 import type { Channel, Guild, LoginFormResponse, Message } from './model';
 import * as schemas from './schemas';
@@ -7,7 +7,7 @@ import { invalid, redirect } from '@sveltejs/kit';
 import { redirectLogin } from './util.svelte';
 
 export const getMotd = query(async () => {
-	const response = await fetch(PUBLIC_BACKEND_URL);
+	const response = await fetch(env.PUBLIC_BACKEND_URL);
 	return await response.text();
 });
 

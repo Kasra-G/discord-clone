@@ -51,9 +51,7 @@ class GuildRepository(val db: Database) {
       }
 
   fun get(guildId: GuildId): Guild =
-      transaction(db) {
-        Guilds.selectAll().where { Guilds.id eq guildId.value }.single().toGuild()
-      }
+      transaction(db) { Guilds.selectAll().where { Guilds.id eq guildId.value }.single().toGuild() }
 
   fun update(guildId: GuildId, name: String?, description: String?): Guild =
       transaction(db) {
@@ -67,13 +65,7 @@ class GuildRepository(val db: Database) {
       }
 
   fun delete(guildId: GuildId): Guild =
-      transaction(db) {
-        Guilds.deleteReturning {
-              Guilds.id eq guildId.value
-            }
-            .single()
-            .toGuild()
-      }
+      transaction(db) { Guilds.deleteReturning { Guilds.id eq guildId.value }.single().toGuild() }
 
   fun create(ownerId: UserId, name: String, description: String): Guild =
       transaction(db) {
