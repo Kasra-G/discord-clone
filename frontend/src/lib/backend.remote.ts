@@ -14,7 +14,7 @@ export const getMotd = query(async () => {
 export const getGuildChannels = query(schemas.GET_GUILD_CHANNELS, async ({ guildId }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}/channels`, {
-		method: 'GET'
+		method: 'GET',
 	});
 
 	const channels = (await response.json()) as Channel[];
@@ -24,7 +24,7 @@ export const getGuildChannels = query(schemas.GET_GUILD_CHANNELS, async ({ guild
 export const getSelfGuilds = query(async () => {
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds`, {
-		method: 'GET'
+		method: 'GET',
 	});
 
 	const guilds = (await response.json()) as Guild[];
@@ -38,8 +38,8 @@ export const selfCreateGuild = form(schemas.SELF_CREATE_GUILD, async ({ name, de
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
 			name: name,
-			description: description
-		})
+			description: description,
+		}),
 	});
 
 	const guilds = (await response.json()) as Guild;
@@ -51,14 +51,14 @@ export const selfJoinGuild = form(schemas.SELF_JOIN_GUILD, async ({ guildId }) =
 	await event.fetch(`${schemas.BASE_API_URL}/users/@me/guilds/${guildId}/members`, {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({})
+		body: JSON.stringify({}),
 	});
 });
 
 export const getGuild = query(schemas.GET_GUILD, async ({ guildId }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/guilds/${guildId}`, {
-		method: 'GET'
+		method: 'GET',
 	});
 
 	const guilds = (await response.json()) as Guild;
@@ -68,7 +68,7 @@ export const getGuild = query(schemas.GET_GUILD, async ({ guildId }) => {
 export const getChannel = query(schemas.GET_CHANNEL, async ({ channelId }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}`, {
-		method: 'GET'
+		method: 'GET',
 	});
 
 	return (await response.json()) as Channel;
@@ -83,8 +83,8 @@ export const createChannel = form(
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
 				name: channelName,
-				description: channelDescription
-			})
+				description: channelDescription,
+			}),
 		});
 
 		if (response.ok) {
@@ -93,16 +93,16 @@ export const createChannel = form(
 
 		return {
 			ok: response.ok,
-			error: !response.ok ? (await response.json()).error : undefined
+			error: !response.ok ? (await response.json()).error : undefined,
 		};
-	}
+	},
 );
 
 export const logout = form(async () => {
 	const event = getRequestEvent();
 	await event.fetch(`${schemas.BASE_API_URL}/auth/revoke`, {
 		method: 'POST',
-		headers: { 'content-type': 'application/json' }
+		headers: { 'content-type': 'application/json' },
 	});
 	event.cookies.delete('refresh_token', { path: '/' });
 	event.cookies.delete('access_token', { path: '/' });
@@ -115,11 +115,11 @@ export const sendMessage = form(schemas.SEND_MESSAGE, async ({ message, channelI
 	const res = await event.fetch(`${schemas.BASE_API_URL}/channels/${channelId}/messages`, {
 		method: 'POST',
 		body: JSON.stringify({ message: message, channelId: channelId }),
-		headers: { 'content-type': 'application/json' }
+		headers: { 'content-type': 'application/json' },
 	});
 	return {
 		ok: res.ok,
-		error: !res.ok
+		error: !res.ok,
 	};
 });
 
@@ -141,7 +141,7 @@ export const getAuthenticated = query(async () => {
 export const getMessages = query(schemas.GET_MESSAGES, async ({ channelId, count }) => {
 	const event = getRequestEvent();
 	const response = await event.fetch(
-		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`
+		`${schemas.BASE_API_URL}/channels/${channelId}/messages?count=${count}`,
 	);
 	const messages = (await response.json()) as Message[];
 	return messages.toReversed();
@@ -154,10 +154,10 @@ export const register = form(schemas.REGISTER, async (data, issue) => {
 		body: JSON.stringify({
 			username: data.username,
 			email: data.email,
-			password: data._password
+			password: data._password,
 		}),
 		headers: { 'content-type': 'application/json' },
-		method: 'POST'
+		method: 'POST',
 	});
 
 	if (!response.ok) {
@@ -175,10 +175,10 @@ export const login = form(
 			body: JSON.stringify({
 				username: username,
 				password: _password,
-				deviceId: 'my-device'
+				deviceId: 'my-device',
 			}),
 			headers: { 'content-type': 'application/json' },
-			method: 'POST'
+			method: 'POST',
 		});
 
 		const body = await response.json();
@@ -195,5 +195,5 @@ export const login = form(
 
 		void getAuthenticated().refresh();
 		return { ok: true, user: body.user };
-	}
+	},
 );

@@ -4,7 +4,7 @@ import z from 'zod';
 export const GET_MESSAGES = z.object({
 	guildId: z.string().nonempty(),
 	channelId: z.string(),
-	count: z.number().positive().lte(100)
+	count: z.number().positive().lte(100),
 });
 
 export const REGISTER = z
@@ -22,50 +22,50 @@ export const REGISTER = z
 			.regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
 			.regex(/[0-9]/, { message: 'Password must contain at least one number' })
 			.regex(/[^A-Za-z0-9]/, { message: 'Password must contain at least one special character' }),
-		_confirmPassword: z.string().nonempty('Please confirm the password')
+		_confirmPassword: z.string().nonempty('Please confirm the password'),
 	})
 	.refine((data) => data._password === data._confirmPassword, {
 		error: 'Password does not match',
-		path: ['_confirmPassword']
+		path: ['_confirmPassword'],
 	});
 
 export const LOGIN = z.object({
 	username: z.string().nonempty('Please specify a username'),
-	_password: z.string().nonempty('Please specify a password')
+	_password: z.string().nonempty('Please specify a password'),
 });
 
 export const SEND_MESSAGE = z.object({
 	guildId: z.string().nonempty(),
 	message: z.string().nonempty(' ').max(255, 'Message too long'),
-	channelId: z.string().nonempty()
+	channelId: z.string().nonempty(),
 });
 
 export const GET_GUILD_CHANNELS = z.object({
-	guildId: z.string().nonempty()
+	guildId: z.string().nonempty(),
 });
 
 export const GET_GUILD = z.object({
-	guildId: z.string().nonempty()
+	guildId: z.string().nonempty(),
 });
 
 export const SELF_CREATE_GUILD = z.object({
 	name: z.string().nonempty(),
-	description: z.string().nonempty()
+	description: z.string().nonempty(),
 });
 
 export const SELF_JOIN_GUILD = z.object({
-	guildId: z.string().nonempty()
+	guildId: z.string().nonempty(),
 });
 
 export const GET_CHANNEL = z.object({
 	guildId: z.string().nonempty(),
-	channelId: z.string().nonempty()
+	channelId: z.string().nonempty(),
 });
 
 export const CREATE_CHANNEL = z.object({
 	channelName: z.string().nonempty(),
 	channelDescription: z.string(),
-	guildId: z.string().nonempty()
+	guildId: z.string().nonempty(),
 });
 
 export interface UserDetails {

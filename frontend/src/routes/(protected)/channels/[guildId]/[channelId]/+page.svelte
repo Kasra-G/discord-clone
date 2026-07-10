@@ -11,7 +11,7 @@
 
 	let inputText = $state('');
 	let messages = $derived(
-		deep(await getMessages({ guildId: params.guildId, channelId: params.channelId, count: 100 }))
+		deep(await getMessages({ guildId: params.guildId, channelId: params.channelId, count: 100 })),
 	);
 
 	beforeNavigate(({ to }) => {
@@ -21,7 +21,7 @@
 			void getMessages({
 				guildId: guildId,
 				channelId: channelId,
-				count: 100
+				count: 100,
 			}).refresh();
 		}
 	});
@@ -75,7 +75,7 @@
 						<div class="timestamp">
 							{new Date(msg.createdAt).toLocaleString([], {
 								dateStyle: 'short',
-								timeStyle: 'short'
+								timeStyle: 'short',
 							})}
 						</div>
 					</div>

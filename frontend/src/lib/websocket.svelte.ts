@@ -16,7 +16,7 @@ interface SubscriberMap {
 export class WebsocketService {
 	private ws?: WebSocket;
 	private _status = $state<'DISCONNECTED' | 'RECONNECTING' | 'CONNECTING' | 'CONNECTED'>(
-		'DISCONNECTED'
+		'DISCONNECTED',
 	);
 
 	public get status() {
@@ -25,7 +25,7 @@ export class WebsocketService {
 
 	private subscribers: SubscriberMap = {
 		onMessage: [],
-		onOpen: []
+		onOpen: [],
 	};
 
 	destroy() {

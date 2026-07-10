@@ -31,7 +31,7 @@
 		<input
 			{...selfCreateGuild.fields.description.as(
 				'text',
-				`Server for ${getUserState().current?.username}`
+				`Server for ${getUserState().current?.username}`,
 			)}
 		/>
 		<button> Submit </button>

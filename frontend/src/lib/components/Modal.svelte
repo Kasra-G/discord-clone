@@ -3,7 +3,7 @@
 
 	let {
 		showModal = $bindable(false),
-		children
+		children,
 	}: {
 		showModal: boolean;
 		children: Snippet;

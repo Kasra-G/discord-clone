@@ -14,9 +14,9 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 			method: request.method,
 			headers: {
 				...Object.fromEntries(request.headers.entries()),
-				cookie: event.request.headers.get('cookie') || ''
+				cookie: event.request.headers.get('cookie') || '',
 			},
-			body: request.body
+			body: request.body,
 		});
 	}
 
@@ -30,11 +30,11 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json',
-			cookie: event.request.headers.get('cookie') || ''
+			cookie: event.request.headers.get('cookie') || '',
 		},
 		body: JSON.stringify({
-			deviceId: 'my-device'
-		})
+			deviceId: 'my-device',
+		}),
 	});
 
 	event.locals.authenticated = refresh.ok;
@@ -60,8 +60,8 @@ export const handle: Handle = async ({ resolve, event }) => {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({
-				deviceId: 'my-device'
-			})
+				deviceId: 'my-device',
+			}),
 		});
 
 		event.locals.authenticated = refresh.ok;
