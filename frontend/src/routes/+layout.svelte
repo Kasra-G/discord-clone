@@ -5,7 +5,6 @@
 	import type { ResolvedPathname, Pathname } from '$app/types';
 	import favicon from '$lib/assets/favicon.svg';
 	import { logout } from '$lib/backend.remote';
-	import { DEFAULT_GUILD } from '$lib/const';
 	import { setUserState, UserState } from '$lib/user.svelte';
 
 	let { children, data } = $props();
