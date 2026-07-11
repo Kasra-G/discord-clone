@@ -3,27 +3,27 @@
 	"version": "0.0.1",
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@sveltejs/adapter-node": "^3.0.3",
-		"@sveltejs/kit": "^2.63.0",
-		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"@types/node": "^24.13.1",
+		"@sveltejs/adapter-node": "^5.5.7",
+		"@sveltejs/kit": "^2.69.2",
+		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@types/node": "^24.13.3",
 		"@types/set-cookie-parser": "^2.4.10",
-		"@vitest/browser-playwright": "^4.1.8",
-		"eslint": "^10.4.1",
+		"@vitest/browser-playwright": "^4.1.10",
+		"eslint": "^10.7.0",
 		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-svelte": "^3.19.0",
-		"globals": "^17.6.0",
-		"playwright": "^1.60.0",
-		"prettier": "^3.8.3",
+		"eslint-plugin-svelte": "^3.20.0",
+		"globals": "^17.7.0",
+		"playwright": "^1.61.1",
+		"prettier": "^3.9.5",
 		"prettier-plugin-svelte": "^3.5.2",
-		"svelte": "^5.56.2",
-		"svelte-check": "^4.6.0",
+		"svelte": "^5.56.4",
+		"svelte-check": "^4.7.2",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.60.1",
+		"typescript-eslint": "^8.63.0",
 		"typescript-svelte-plugin": "^0.3.52",
-		"vite": "^8.0.16",
-		"vitest": "^4.1.8",
-		"vitest-browser-svelte": "^2.1.1"
+		"vite": "^8.1.4",
+		"vitest": "^4.1.10",
+		"vitest-browser-svelte": "^2.2.1"
 	},
 	"private": true,
 	"scripts": {
@@ -40,7 +40,15 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"set-cookie-parser": "^3.1.0",
+		"@grpc/grpc-js": "^1.14.4",
+		"@opentelemetry/auto-instrumentations-node": "^0.78.0",
+		"@opentelemetry/exporter-trace-otlp-grpc": "^0.220.0",
+		"@opentelemetry/sdk-node": "^0.220.0",
+		"import-in-the-middle": "^3.3.1",
+		"set-cookie-parser": "^3.1.2",
 		"zod": "^4.4.3"
-	}
+	},
+	"trustedDependencies": [
+		"protobufjs"
+	]
 }

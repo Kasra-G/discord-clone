@@ -17,6 +17,7 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 				cookie: event.request.headers.get('cookie') || '',
 			},
 			body: request.body,
+			duplex: 'half',
 		});
 	}
 
