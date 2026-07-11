@@ -1,6 +1,7 @@
 package com.ghkasra.discordclone.repository
 
 import com.ghkasra.discordclone.service.Username
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -37,6 +38,7 @@ class UserRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(Users) }
   }
 
+  @WithSpan
   fun update(
       id: UserId,
       username: Username?,
@@ -52,14 +54,17 @@ class UserRepository(val db: Database) {
             .toUser()
       }
 
+  @WithSpan
   fun get(id: UserId): User =
       transaction(db) { Users.selectAll().where { Users.id eq id.value }.single().toUser() }
 
+  @WithSpan
   fun findByUsername(username: Username): User? =
       transaction(db) {
         Users.selectAll().where { Users.username eq username.value }.singleOrNull()?.toUser()
       }
 
+  @WithSpan
   fun create(
       username: Username,
       email: Email,

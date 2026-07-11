@@ -13,6 +13,7 @@ import com.ghkasra.discordclone.repository.UserCredentialRepository
 import com.ghkasra.discordclone.repository.UserId
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.util.toGMTDate
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.security.MessageDigest
 import java.security.SecureRandom
 import kotlin.io.encoding.Base64
@@ -43,6 +44,7 @@ class AuthenticationService(
     val tokenFactory: RefreshTokenFactory,
 ) {
 
+  @WithSpan
   fun authenticateByUserLogin(userLogin: UserLogin): Boolean {
     val credentials =
         credentialsRepository.findByUsername(userLogin.username)
@@ -51,10 +53,12 @@ class AuthenticationService(
     return passwordUtil.verifyPassword(userLogin.password, credentials.passwordHash)
   }
 
+  @WithSpan
   fun storeUserLoginCredentials(userLogin: UserLogin) {
     credentialsRepository.create(userLogin.username, passwordUtil.hashPassword(userLogin.password))
   }
 
+  @WithSpan
   fun issueRefreshToken(userId: UserId, deviceId: DeviceId): RefreshToken {
     val refreshToken = tokenFactory.create()
     refreshTokenRepository.save(
@@ -66,6 +70,7 @@ class AuthenticationService(
     return refreshToken
   }
 
+  @WithSpan
   fun generateAccessToken(token: RefreshToken, deviceId: DeviceId): BearerTokens {
     val tokenCredentials =
         refreshTokenRepository.findValidTokenByHash(hashRefreshToken(token), deviceId)
@@ -122,6 +127,7 @@ class AuthenticationService(
 class RefreshTokenFactory {
   private val secureRandom = SecureRandom()
 
+  @WithSpan
   fun create(): RefreshToken {
     val randomBytes = ByteArray(TOKEN_BYTE_LENGTH)
     secureRandom.nextBytes(randomBytes)
@@ -134,15 +140,17 @@ class RefreshTokenFactory {
 }
 
 class HashUtil(val digest: MessageDigest) {
-  fun hash(value: String): String = digest.digest(value.encodeToByteArray()).toHexString()
+  @WithSpan fun hash(value: String): String = digest.digest(value.encodeToByteArray()).toHexString()
 }
 
 class PasswordUtil(val hasher: BCrypt.Hasher) {
+  @WithSpan
   fun hashPassword(password: Password): PasswordHash {
     require(password.value.length <= 72) { "password must be less than 72 characters long!" }
     return PasswordHash(hasher.hashToString(10, password.value.toCharArray()))
   }
 
+  @WithSpan
   fun verifyPassword(password: Password, passwordHash: PasswordHash): Boolean {
     return BCrypt.verifyer()
         .verify(password.value.toCharArray(), passwordHash.value.toCharArray())

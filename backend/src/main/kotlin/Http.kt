@@ -13,7 +13,7 @@ fun Application.configureHttp() {
     allowHeader(HttpHeaders.Authorization)
     allowNonSimpleContentTypes = true
     allowHost(
-        host = Environment.DOMAIN,
+        host = Environment.HOST,
         schemes = listOf("http", "https"),
     ) // @TODO: Don't do this in production if possible. Try to limit it.
   }

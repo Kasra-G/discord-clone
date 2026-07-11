@@ -1,5 +1,6 @@
 package com.ghkasra.discordclone.repository
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -40,6 +41,7 @@ class MessageRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(Messages) }
   }
 
+  @WithSpan
   fun listMessages(channel: ChannelId, count: Int): List<Message> =
       transaction(db) {
         (Messages innerJoin Users)
@@ -51,6 +53,7 @@ class MessageRepository(val db: Database) {
             .toList()
       }
 
+  @WithSpan
   fun save(channelId: ChannelId, content: String, authorId: UserId): Message =
       transaction(db) {
         val insertedMessageId = Messages.insertAndGetId {

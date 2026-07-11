@@ -6,6 +6,7 @@ COPY *.gradle.kts gradle.properties /home/gradle/app/
 COPY gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app
 RUN gradle dependencies --no-daemon
+ADD --chmod=644 https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.29.0/opentelemetry-javaagent.jar /app/otel-javaagent.jar
 
 # Stage 2: Build Application
 FROM gradle:latest AS build
@@ -21,4 +22,7 @@ FROM amazoncorretto:25 AS runtime
 EXPOSE 8080
 RUN mkdir /app
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/server.jar
+COPY --from=cache /app/otel-javaagent.jar /app/otel-javaagent.jar
+
+ENV JAVA_TOOL_OPTIONS="-javaagent:/app/otel-javaagent.jar"
 ENTRYPOINT ["java","-jar","/app/server.jar"]

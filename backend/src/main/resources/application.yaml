@@ -9,8 +9,8 @@ ktor:
     port: 8080
   application:
     modules:
-      - com.ghkasra.discordclone.SecurityKt.configureSecurity
       - com.ghkasra.discordclone.CallLoggingKt.configureCallLogging
+      - com.ghkasra.discordclone.SecurityKt.configureSecurity
       - com.ghkasra.discordclone.HttpKt.configureHttp
       - com.ghkasra.discordclone.SerializationKt.configureSerialization
       - com.ghkasra.discordclone.WebsocketsKt.configureWebsockets

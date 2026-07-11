@@ -13,6 +13,8 @@ application { mainClass = "io.ktor.server.netty.EngineMain" }
 
 kotlin { jvmToolchain(25) }
 
+val otelAgent: Configuration by configurations.creating
+
 dependencies {
 
   // ktor plugins
@@ -28,7 +30,24 @@ dependencies {
   implementation(ktorLibs.server.websockets)
   implementation(ktorLibs.server.requestValidation)
   implementation(ktorLibs.server.callLogging)
+  implementation(ktorLibs.server.metrics.micrometer)
   implementation(ktorLibs.serialization.kotlinx.json)
+
+  // telemetry
+  implementation(platform("io.opentelemetry:opentelemetry-bom:1.63.0"))
+  implementation(platform("io.micrometer:micrometer-bom:1.17.0"))
+  implementation(
+      platform(
+          "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.29.0-alpha"
+      )
+  )
+  otelAgent("io.opentelemetry.javaagent:opentelemetry-javaagent:2.29.0")
+
+  implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")
+  runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
+  implementation("io.micrometer:micrometer-registry-prometheus")
 
   // logging
   implementation(libs.logback.classic)
@@ -49,6 +68,18 @@ dependencies {
   testImplementation(ktorLibs.server.testHost)
 }
 
-tasks.withType<JavaExec> { systemProperty("jansi.passthrough", "true") }
+tasks.withType<JavaExec> {
+  val agentJar = configurations["otelAgent"].incoming.files.singleFile.absolutePath
+  doFirst {
+    jvmArgs("-javaagent:$agentJar")
+  }
+  systemProperty("jansi.passthrough", "true")
+  environment("OTEL_SERVICE_NAME", "ktor-backend")
+  environment("OTEL_TRACES_EXPORTER", "otlp")
+  environment("OTEL_METRICS_EXPORTER", "otlp")
+  environment("OTEL_LOGS_EXPORTER", "otlp")
+  environment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
+  environment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+}
 
 tasks.register("format") { dependsOn("ktfmtFormat") }

@@ -6,11 +6,13 @@ import com.ghkasra.discordclone.repository.Email
 import com.ghkasra.discordclone.repository.User
 import com.ghkasra.discordclone.repository.UserId
 import com.ghkasra.discordclone.repository.UserRepository
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.serialization.Serializable
 import org.slf4j.Logger
 
 class UserService(val authService: AuthenticationService, val userRepository: UserRepository) {
 
+  @WithSpan
   context(logger: Logger)
   fun register(request: UserRegistrationRequest): UserRegistrationResponse {
     logger.debug("Attempting to register user ${request.username}")
@@ -29,6 +31,7 @@ class UserService(val authService: AuthenticationService, val userRepository: Us
     return UserRegistrationResponse(userDetails.id)
   }
 
+  @WithSpan
   context(logger: Logger)
   fun login(request: UserLoginRequest): UserLoginResponse {
     logger.debug("Attempting to log in user ${request.username}")

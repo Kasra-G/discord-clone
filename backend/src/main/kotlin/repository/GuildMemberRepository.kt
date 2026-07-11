@@ -1,5 +1,6 @@
 package com.ghkasra.discordclone.repository
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
@@ -42,6 +43,7 @@ class GuildMemberRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(GuildMembers) }
   }
 
+  @WithSpan
   fun listGuildMembers(guildId: GuildId): List<GuildMember> =
       transaction(db) {
         (GuildMembers.innerJoin(Users))
@@ -51,6 +53,7 @@ class GuildMemberRepository(val db: Database) {
             .toList()
       }
 
+  @WithSpan
   fun listUserGuilds(userId: UserId): List<Guild> =
       transaction(db) {
         (GuildMembers.innerJoin(Guilds))
@@ -60,6 +63,7 @@ class GuildMemberRepository(val db: Database) {
             .toList()
       }
 
+  @WithSpan
   fun get(guildId: GuildId, userId: UserId): GuildMember =
       transaction(db) {
         (GuildMembers.innerJoin(Users))
@@ -75,6 +79,7 @@ class GuildMemberRepository(val db: Database) {
             .toGuildMember()
       }
 
+  @WithSpan
   fun delete(guildId: GuildId, userId: UserId): Unit =
       transaction(db) {
         GuildMembers.deleteReturning {
@@ -87,6 +92,7 @@ class GuildMemberRepository(val db: Database) {
             .single()
       }
 
+  @WithSpan
   fun create(guildId: GuildId, userId: UserId): Unit =
       transaction(db) {
         GuildMembers.insertReturning {

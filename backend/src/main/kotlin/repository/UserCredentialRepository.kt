@@ -1,6 +1,7 @@
 package com.ghkasra.discordclone.repository
 
 import com.ghkasra.discordclone.service.Username
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.serialization.Serializable
@@ -35,6 +36,7 @@ class UserCredentialRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(UserCredentials) }
   }
 
+  @WithSpan
   fun findByUsername(username: Username): UserCredential? =
       transaction(db) {
         UserCredentials.selectAll()
@@ -43,6 +45,7 @@ class UserCredentialRepository(val db: Database) {
             ?.toUserCredential()
       }
 
+  @WithSpan
   fun create(username: Username, password: PasswordHash): UserCredential =
       transaction(db) {
         UserCredentials.insertReturning {

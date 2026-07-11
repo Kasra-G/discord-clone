@@ -1,5 +1,6 @@
 package com.ghkasra.discordclone.repository
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -46,6 +47,7 @@ class ChannelRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(Channels) }
   }
 
+  @WithSpan
   fun list(guildId: GuildId): List<Channel> =
       transaction(db) {
         Channels.selectAll()
@@ -54,11 +56,13 @@ class ChannelRepository(val db: Database) {
             .toList()
       }
 
+  @WithSpan
   fun get(channelId: ChannelId): Channel =
       transaction(db) {
         Channels.selectAll().where { Channels.id.eq(channelId.value) }.single().toChannel()
       }
 
+  @WithSpan
   fun update(channelId: ChannelId, name: String?, description: String?): Channel =
       transaction(db) {
         Channels.updateReturning(where = { Channels.id.eq(channelId.value) }) {
@@ -70,11 +74,13 @@ class ChannelRepository(val db: Database) {
             .toChannel()
       }
 
+  @WithSpan
   fun delete(channelId: ChannelId): Channel =
       transaction(db) {
         Channels.deleteReturning { Channels.id.eq(channelId.value) }.single().toChannel()
       }
 
+  @WithSpan
   fun create(guildId: GuildId, name: String, description: String): Channel =
       transaction(db) {
         Channels.insertReturning {

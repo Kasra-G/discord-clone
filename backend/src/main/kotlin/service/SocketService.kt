@@ -9,6 +9,7 @@ import io.ktor.server.application.log
 import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.application
 import io.ktor.server.websocket.sendSerialized
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.channels.consumeEach
@@ -70,6 +71,7 @@ class SocketService(
     incoming.consumeEach {}
   }
 
+  @WithSpan
   suspend fun sendChannelMessage(
       message: Message,
   ) = supervisorScope {

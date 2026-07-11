@@ -9,6 +9,7 @@ import com.ghkasra.discordclone.repository.RefreshTokens.isRevoked
 import com.ghkasra.discordclone.repository.RefreshTokens.tokenHash
 import com.ghkasra.discordclone.repository.RefreshTokens.updatedAt
 import com.ghkasra.discordclone.repository.RefreshTokens.userId
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
@@ -67,6 +68,7 @@ class RefreshTokenRepository(val db: Database) {
     transaction(db) { SchemaUtils.create(RefreshTokens) }
   }
 
+  @WithSpan
   fun save(
       tokenHash: RefreshTokenHash,
       userId: UserId,
@@ -84,6 +86,7 @@ class RefreshTokenRepository(val db: Database) {
             .toRefreshTokenCredentials()
       }
 
+  @WithSpan
   fun findValidTokenByHash(token: RefreshTokenHash, deviceId: DeviceId): RefreshTokenCredentials? =
       transaction(db) {
         RefreshTokens.updateReturning(
@@ -101,6 +104,7 @@ class RefreshTokenRepository(val db: Database) {
             ?.toRefreshTokenCredentials()
       }
 
+  @WithSpan
   fun revokeAll(userId: UserId) =
       transaction(db) {
         RefreshTokens.update(where = { RefreshTokens.userId.eq(userId.value) }) {
@@ -109,6 +113,7 @@ class RefreshTokenRepository(val db: Database) {
         }
       }
 
+  @WithSpan
   fun revoke(userId: UserId, deviceId: DeviceId) =
       transaction(db) {
         RefreshTokens.update({
@@ -119,6 +124,7 @@ class RefreshTokenRepository(val db: Database) {
         }
       }
 
+  @WithSpan
   fun listByUserId(userId: UserId): List<RefreshTokenCredentials> =
       transaction(db) {
         RefreshTokens.selectAll()
