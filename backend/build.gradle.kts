@@ -74,7 +74,7 @@ tasks.withType<JavaExec> {
     jvmArgs("-javaagent:$agentJar")
   }
   systemProperty("jansi.passthrough", "true")
-  environment("OTEL_SERVICE_NAME", "ktor-backend")
+  environment("OTEL_SERVICE_NAME", "ktor-dev")
   environment("OTEL_TRACES_EXPORTER", "otlp")
   environment("OTEL_METRICS_EXPORTER", "otlp")
   environment("OTEL_LOGS_EXPORTER", "otlp")
