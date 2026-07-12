@@ -1,0 +1,48 @@
+---
+services:
+  nginx:
+    image: nginx:alpine
+    ports: [80:80, 443:443]
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - FRONTEND_URL=http://frontend:3000
+      - DOMAIN=dihcord.com
+      - BACKEND_DOMAIN=backend
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+    depends_on: [frontend, backend]
+    restart: always
+  frontend:
+    build: ./frontend
+    env_file: [./frontend/.env]
+    environment:
+      - PUBLIC_BACKEND_URL=https://dihcord.com
+      - BACKEND_URL=http://backend:8080
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_SERVICE_NAME=sveltekit
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://grafana-lgtm:4317
+    depends_on: [grafana-lgtm]
+  backend:
+    build: ./backend
+    env_file: [./backend/.env]
+    environment:
+      - DOMAIN=dihcord.com
+      - HOST=dihcord.com
+      - OTEL_SERVICE_NAME=ktor
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://grafana-lgtm:4317
+    volumes: [./backend/.env:/.env, ./backend/chat.db:/chat.db]
+    depends_on: [grafana-lgtm]
+  grafana-lgtm:
+    env_file: [./grafana/.env]
+    image: grafana/otel-lgtm:latest
+    ports: [4317:4317, 4318:4318, 3000:3000]
+    restart: unless-stopped
