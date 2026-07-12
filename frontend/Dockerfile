@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM oven/bun:1-alpine AS builder
+FROM imbios/bun-node:latest-current-alpine AS builder
 
 WORKDIR /app
 
@@ -9,10 +9,10 @@ RUN bun install --frozen-lockfile
 
 # Copy all source files and build the SvelteKit app
 COPY . .
-RUN bun run build
+RUN npm run build
 
 # Stage 2: Run the application
-FROM oven/bun:1-alpine AS runner
+FROM imbios/bun-node:latest-current-alpine AS runner
 
 WORKDIR /app
 
@@ -25,13 +25,11 @@ ENV HOST_HEADER=x-forwarded-host
 
 # Copy only the compiled build and production dependencies from stage 1
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/bun.lockb ./bun.lockb
+COPY package.json bun.lockb ./
 
-# Install only production dependencies to keep the image lightweight
 RUN bun install --production --frozen-lockfile
 
 EXPOSE 3000
 
-CMD ["bun", "run", "./build/index.js"]
+CMD ["node", "./build/index.js"]
 
