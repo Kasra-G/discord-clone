@@ -20,6 +20,7 @@ services:
     environment:
       - PUBLIC_BACKEND_URL=https://dihcord.com
       - BACKEND_URL=http://backend:8080
+      - ORIGIN=http://localhost:3000
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_METRICS_EXPORTER=otlp
       - OTEL_LOGS_EXPORTER=otlp
@@ -39,10 +40,10 @@ services:
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://grafana-lgtm:4317
-    volumes: [./backend/.env:/.env, ./backend/chat.db:/chat.db]
+    volumes: [./backend/chat.db:/app/chat.db]
     depends_on: [grafana-lgtm]
   grafana-lgtm:
     env_file: [./grafana/.env]
     image: grafana/otel-lgtm:latest
-    ports: [4317:4317, 4318:4318, 3000:3000]
+    ports: [4317:4317, 4318:4318, 3000:3000, 4040:4040]
     restart: unless-stopped
