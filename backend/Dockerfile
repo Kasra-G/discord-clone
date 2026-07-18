@@ -16,13 +16,12 @@ WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
-EXPOSE 8080
-
 COPY --from=build /app/build/libs/*.jar server.jar
 COPY --from=build /app/otel-javaagent.jar otel-javaagent.jar
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/api/health || exit 1
 
+EXPOSE 8080
 ENV JAVA_TOOL_OPTIONS="-javaagent:otel-javaagent.jar"
 ENTRYPOINT ["java","-jar","server.jar"]
