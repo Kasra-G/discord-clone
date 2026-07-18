@@ -72,9 +72,14 @@ fun Application.configureRouting() {
           userRepository = userRepo,
       )
 
+  @Serializable data class HealthCheckResponse(val status: String, val timestamp: Instant)
+
   context(log) {
     routing {
       route("/api") {
+        get("/health") {
+          call.respond(HttpStatusCode.OK, HealthCheckResponse("ok", Clock.System.now()))
+        }
         post("/users/register") {
           val request = call.receive<UserRegistrationRequest>()
           val response = userService.register(request)

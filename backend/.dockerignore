@@ -1,0 +1,10 @@
+.gradle
+.idea
+.DS_Store
+build
+out
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md

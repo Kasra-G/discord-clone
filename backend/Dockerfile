@@ -1,28 +1,28 @@
-# Stage 1: Cache Gradle dependencies
-FROM gradle:latest AS cache
-RUN mkdir -p /home/gradle/cache_home
-ENV GRADLE_USER_HOME=/home/gradle/cache_home
-COPY *.gradle.kts gradle.properties /home/gradle/app/
-COPY gradle /home/gradle/app/gradle
-WORKDIR /home/gradle/app
-RUN gradle dependencies --no-daemon
+FROM eclipse-temurin:25-jdk-alpine AS build
+WORKDIR /app
+
+COPY gradlew .
+COPY gradle gradle
+COPY *.gradle.kts gradle.properties .
+
 ADD --chmod=644 https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.29.0/opentelemetry-javaagent.jar /app/otel-javaagent.jar
+RUN --mount=type=cache,target=/root/.gradle ./gradlew dependencies --no-daemon
+COPY src src
 
-# Stage 2: Build Application
-FROM gradle:latest AS build
-COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src
-# Build the fat JAR, Gradle also supports shadow
-# and boot JAR by default.
-RUN gradle buildFatJar --no-daemon
+RUN --mount=type=cache,target=/root/.gradle ./gradlew buildFatJar -x test --no-daemon
 
-# Stage 3: Create the Runtime Image
-FROM amazoncorretto:25 AS runtime
+FROM eclipse-temurin:25-jre-alpine AS runtime
+WORKDIR /app
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 EXPOSE 8080
-RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/server.jar
-COPY --from=cache /app/otel-javaagent.jar /app/otel-javaagent.jar
 
-ENV JAVA_TOOL_OPTIONS="-javaagent:/app/otel-javaagent.jar"
-ENTRYPOINT ["java","-jar","/app/server.jar"]
+COPY --from=build /app/build/libs/*.jar server.jar
+COPY --from=build /app/otel-javaagent.jar otel-javaagent.jar
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/api/health || exit 1
+
+ENV JAVA_TOOL_OPTIONS="-javaagent:otel-javaagent.jar"
+ENTRYPOINT ["java","-jar","server.jar"]

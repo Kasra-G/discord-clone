@@ -1,8 +1,11 @@
+import io.github.klahap.dotenv.DotEnvBuilder
+
 plugins {
   alias(libs.plugins.kotlin.jvm)
   alias(ktorLibs.plugins.ktor)
   alias(libs.plugins.kotlin.serialization)
   id("com.ncorti.ktfmt.gradle") version "0.26.0"
+  id("io.github.klahap.dotenv") version "1.1.3"
 }
 
 group = "com.ghkasra.discordclone"
@@ -13,7 +16,10 @@ application { mainClass = "io.ktor.server.netty.EngineMain" }
 
 kotlin { jvmToolchain(25) }
 
-val otelAgent: Configuration by configurations.creating
+val otelAgent by configurations.registering {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+}
 
 dependencies {
 
@@ -44,6 +50,7 @@ dependencies {
   otelAgent("io.opentelemetry.javaagent:opentelemetry-javaagent:2.29.0")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0")
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")
   runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
@@ -60,7 +67,6 @@ dependencies {
   //  implementation(libs.exposed.migration.core)
   //  implementation(libs.exposed.migration.jdbc)
 
-  implementation("io.github.cdimascio:dotenv-kotlin:6.5.1") // .env
   implementation("at.favre.lib:bcrypt:0.10.2") // bcrypt
   implementation("org.xerial:sqlite-jdbc:3.53.1.0") // sqlite
 
@@ -68,18 +74,34 @@ dependencies {
   testImplementation(ktorLibs.server.testHost)
 }
 
-tasks.withType<JavaExec> {
-  val agentJar = configurations["otelAgent"].incoming.files.singleFile.absolutePath
+tasks.named<JavaExec>("run") {
   doFirst {
-    jvmArgs("-javaagent:$agentJar")
+    val otelAgentJar = configurations[otelAgent.name].singleFile.absolutePath
+    jvmArgs("-javaagent:$otelAgentJar")
+
+    val envVars = DotEnvBuilder.dotEnv {
+      addFile("$rootDir/.env")
+    }
+    listOf(
+            "DOMAIN",
+            "HOST",
+            "DATABASE_URL",
+            "JWT_SECRET",
+        )
+        .forEach {
+          environment(
+              it,
+              envVars[it] ?: throw IllegalArgumentException("Required env variable $it not set."),
+          )
+        }
   }
-  systemProperty("jansi.passthrough", "true")
   environment("OTEL_SERVICE_NAME", "ktor-dev")
   environment("OTEL_TRACES_EXPORTER", "otlp")
   environment("OTEL_METRICS_EXPORTER", "otlp")
   environment("OTEL_LOGS_EXPORTER", "otlp")
   environment("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
   environment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+  systemProperty("jansi.passthrough", "true")
 }
 
 tasks.register("format") { dependsOn("ktfmtFormat") }
