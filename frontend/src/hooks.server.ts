@@ -9,6 +9,23 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 	const refresh_token = event.cookies.get('refresh_token');
 	const correlationId = event.request.headers.get('x-request-id') || crypto.randomUUID();
 
+	request = new Request(request.url, {
+		method: request.method,
+		headers: {
+			...Object.fromEntries(request.headers.entries()),
+			cookie: event.cookies
+				.getAll()
+				.map((cookie) => {
+					const safeName = encodeURIComponent(cookie.name);
+					const safeValue = encodeURIComponent(cookie.value);
+					return `${safeName}=${safeValue}`;
+				})
+				.join('; '),
+		},
+		body: request.body,
+		duplex: 'half',
+	});
+
 	if (request.url.startsWith(env.PUBLIC_BACKEND_URL)) {
 		const internalUrl = request.url.replace(env.PUBLIC_BACKEND_URL, private_env.BACKEND_URL);
 
@@ -22,15 +39,7 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 			},
 			'Replacing public backend target with internal URL',
 		);
-		request = new Request(internalUrl, {
-			method: request.method,
-			headers: {
-				...Object.fromEntries(request.headers.entries()),
-				cookie: event.request.headers.get('cookie') || '',
-			},
-			body: request.body,
-			duplex: 'half',
-		});
+		request = new Request(internalUrl, request);
 	}
 
 	try {
@@ -53,7 +62,7 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				cookie: event.request.headers.get('cookie') || '',
+				cookie: request.headers.get('cookie') || '',
 			},
 			body: JSON.stringify({
 				deviceId: 'my-device',
@@ -70,6 +79,22 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 			cookies.forEach((cookie) => {
 				const { name, value, ...options } = cookie;
 				event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
+			});
+			request = new Request(request.url, {
+				method: request.method,
+				headers: {
+					...Object.fromEntries(request.headers.entries()),
+					cookie: event.cookies
+						.getAll()
+						.map((cookie) => {
+							const safeName = encodeURIComponent(cookie.name);
+							const safeValue = encodeURIComponent(cookie.value);
+							return `${safeName}=${safeValue}`;
+						})
+						.join('; '),
+				},
+				body: request.body,
+				duplex: 'half',
 			});
 		} else {
 			logger.debug(

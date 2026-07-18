@@ -2,7 +2,7 @@ import pino from 'pino';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const transport = pino.transport({
-	level: process.env.LOG_LEVEL || 'info',
+	level: process.env.PINO_LOG_LEVEL?.toLowerCase() || 'debug',
 	targets: [
 		{
 			target: 'pino-opentelemetry-transport',
