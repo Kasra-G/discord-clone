@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.github.klahap.dotenv.DotEnvBuilder
 
 plugins {
@@ -105,3 +106,27 @@ tasks.named<JavaExec>("run") {
 }
 
 tasks.register("format") { dependsOn("ktfmtFormat") }
+
+tasks.withType<ShadowJar> {
+  archiveClassifier.set("all")
+
+  exclude("org/sqlite/native/Windows/**")
+  exclude("org/sqlite/native/Mac/**")
+  exclude("org/sqlite/native/FreeBSD/**")
+  exclude("org/sqlite/native/Linux/arm/**")
+  exclude("org/sqlite/native/Linux/armv6/**")
+  exclude("org/sqlite/native/Linux/aarch64/**")
+  exclude("org/sqlite/native/Linux/android/**")
+  exclude("org/sqlite/native/Linux/ppc64le/**")
+  exclude("org/sqlite/native/Linux/riscv64/**")
+  exclude("org/sqlite/native/Linux/s390x/**")
+  // exclude("org/sqlite/native/Linux/x86_64/**") // Keeping this one as an example
+
+  exclude("META-INF/maven/**")
+  exclude("META-INF/LICENSE*")
+  exclude("META-INF/NOTICE*")
+  exclude("META-INF/*.SF")
+  exclude("META-INF/*.DSA")
+  exclude("META-INF/*.RSA")
+  exclude("module-info.class")
+}
