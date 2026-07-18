@@ -8,8 +8,8 @@ FROM node:26-alpine AS deps-prod
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY --from=deps /app/node_modules ./node_modules/
-RUN npm prune --omit=dev
+RUN npm ci --omit=dev
+RUN rm -rf node_modules/@types
 
 FROM node:26-alpine AS builder
 WORKDIR /app
