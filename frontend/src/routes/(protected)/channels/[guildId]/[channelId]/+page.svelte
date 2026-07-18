@@ -23,6 +23,7 @@
 				channelId: channelId,
 				count: 100,
 			}).refresh();
+			void getChannelDetails().refresh();
 		}
 	});
 
