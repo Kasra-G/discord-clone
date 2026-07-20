@@ -40,6 +40,12 @@ services:
       - OTEL_LOGS_EXPORTER=otlp
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://grafana-lgtm:4317
+      - PYROSCOPE_APPLICATION_NAME=ktor-dev
+      - PYROSCOPE_SERVER_ADDRESS=http://grafana-lgtm:4040
+      - PYROSCOPE_FORMAT=jfr
+      - PYROSCOPE_PROFILER_EVENT=wall
+      - OTEL_EXPERIMENTAL_ASYNCHRONOUS_CONTEXT_PROPAGATION=true
+      - PYROSCOPE_PROFILER_ALLOC=512k
     volumes: [./backend/data:/app/data]
     depends_on: [grafana-lgtm]
   grafana-lgtm:

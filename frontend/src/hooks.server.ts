@@ -42,84 +42,86 @@ export const handleFetch: HandleFetch = async ({ request, fetch, event }) => {
 		request = new Request(internalUrl, request);
 	}
 
-	try {
-		const res = await fetch(request);
+  return fetch(request)
 
-		if (res.status !== 401 || !refresh_token) {
-			return res;
-		}
-
-		logger.debug(
-			{
-				event: 'token_refresh_attempt',
-				trigger: 'fetch_401',
-				url: request.url,
-				correlationId,
-			},
-			'User not authenticated, attempting to refresh access token via handleFetch',
-		);
-		const refresh = await fetch(`${private_env.BACKEND_URL}/api/auth/refresh`, {
-			method: 'POST',
-			headers: {
-				'content-type': 'application/json',
-				cookie: request.headers.get('cookie') || '',
-			},
-			body: JSON.stringify({
-				deviceId: 'my-device',
-			}),
-		});
-
-		event.locals.authenticated = refresh.ok;
-		if (refresh.ok) {
-			logger.info(
-				{ event: 'token_refresh_success', correlationId },
-				'Successfully refreshed token via handleFetch',
-			);
-			const cookies = parseSetCookie(refresh);
-			cookies.forEach((cookie) => {
-				const { name, value, ...options } = cookie;
-				event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
-			});
-			request = new Request(request.url, {
-				method: request.method,
-				headers: {
-					...Object.fromEntries(request.headers.entries()),
-					cookie: event.cookies
-						.getAll()
-						.map((cookie) => {
-							const safeName = encodeURIComponent(cookie.name);
-							const safeValue = encodeURIComponent(cookie.value);
-							return `${safeName}=${safeValue}`;
-						})
-						.join('; '),
-				},
-				body: request.body,
-				duplex: 'half',
-			});
-		} else {
-			logger.debug(
-				{
-					event: 'token_refresh_failed',
-					statusCode: refresh.status,
-					correlationId,
-				},
-				'Token refresh failed during API route fetch interception',
-			);
-		}
-
-		return await fetch(request.clone());
-	} catch (error) {
-		logger.error(
-			{
-				event: 'fetch_interception_error',
-				url: request.url,
-				error,
-				correlationId,
-			},
-			'Uncaught exception occurred during fetch lifecycle execution',
-		);
-		throw error;
-	}
+	// try {
+	// 	const res = await fetch(request);
+	//
+	// 	if (res.status !== 401 || !refresh_token) {
+	// 		return res;
+	// 	}
+	//
+	// 	logger.debug(
+	// 		{
+	// 			event: 'token_refresh_attempt',
+	// 			trigger: 'fetch_401',
+	// 			url: request.url,
+	// 			correlationId,
+	// 		},
+	// 		'User not authenticated, attempting to refresh access token via handleFetch',
+	// 	);
+	// 	const refresh = await fetch(`${private_env.BACKEND_URL}/api/auth/refresh`, {
+	// 		method: 'POST',
+	// 		headers: {
+	// 			'content-type': 'application/json',
+	// 			cookie: request.headers.get('cookie') || '',
+	// 		},
+	// 		body: JSON.stringify({
+	// 			deviceId: 'my-device',
+	// 		}),
+	// 	});
+	//
+	// 	event.locals.authenticated = refresh.ok;
+	// 	if (refresh.ok) {
+	// 		logger.info(
+	// 			{ event: 'token_refresh_success', correlationId },
+	// 			'Successfully refreshed token via handleFetch',
+	// 		);
+	// 		const cookies = parseSetCookie(refresh);
+	// 		cookies.forEach((cookie) => {
+	// 			const { name, value, ...options } = cookie;
+	// 			event.cookies.set(name, value, { ...options, path: '/', sameSite: 'lax' });
+	// 		});
+	// 		request = new Request(request.url, {
+	// 			method: request.method,
+	// 			headers: {
+	// 				...Object.fromEntries(request.headers.entries()),
+	// 				cookie: event.cookies
+	// 					.getAll()
+	// 					.map((cookie) => {
+	// 						const safeName = encodeURIComponent(cookie.name);
+	// 						const safeValue = encodeURIComponent(cookie.value);
+	// 						return `${safeName}=${safeValue}`;
+	// 					})
+	// 					.join('; '),
+	// 			},
+	// 			body: request.body,
+	// 			duplex: 'half',
+	// 		});
+	// 	} else {
+	// 		logger.debug(
+	// 			{
+	// 				event: 'token_refresh_failed',
+	// 				statusCode: refresh.status,
+	// 				correlationId,
+	// 			},
+	// 			'Token refresh failed during API route fetch interception',
+	// 		);
+	// 	}
+	//
+	// 	return await fetch(request.clone());
+	// } catch (error) {
+	// 	logger.error(
+	// 		{
+	// 			event: 'fetch_interception_error',
+	// 			url: request.url,
+	// 			error,
+	// 			correlationId,
+	// 		},
+	// 		'Uncaught exception occurred during fetch lifecycle execution',
+	// 	);
+	// 	throw error;
+	// }
 };
 
 export const handle: Handle = async ({ resolve, event }) => {

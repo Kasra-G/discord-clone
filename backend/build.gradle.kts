@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import de.undercouch.gradle.tasks.download.Download
 import io.github.klahap.dotenv.DotEnvBuilder
 
 plugins {
@@ -6,6 +7,7 @@ plugins {
   alias(ktorLibs.plugins.ktor)
   alias(libs.plugins.kotlin.serialization)
   id("com.ncorti.ktfmt.gradle") version "0.26.0"
+  id("de.undercouch.download") version "5.6.0"
   id("io.github.klahap.dotenv") version "1.1.3"
 }
 
@@ -13,7 +15,7 @@ group = "com.ghkasra.discordclone"
 
 version = "1.0.0-SNAPSHOT"
 
-application { mainClass = "io.ktor.server.netty.EngineMain" }
+application { mainClass = "com.ghkasra.discordclone.MainKt" }
 
 kotlin { jvmToolchain(25) }
 
@@ -57,6 +59,10 @@ dependencies {
   runtimeOnly("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.micrometer:micrometer-registry-prometheus")
 
+  // caching
+  implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
+  implementation("com.sksamuel.aedile:aedile-core:3.0.4")
+
   // logging
   implementation(libs.logback.classic)
 
@@ -75,10 +81,25 @@ dependencies {
   testImplementation(ktorLibs.server.testHost)
 }
 
+val downloadPyroscopeExtension by
+    tasks.registering(Download::class) {
+      group = "build"
+      description = "Downloads the Pyroscope OTEL extension jar via plugin"
+
+      src(
+          "https://github.com/grafana/otel-profiling-java/releases/download/v2.1.0/pyroscope-otel-javaagent-extension.jar"
+      )
+      dest(layout.buildDirectory.file("pyroscope/pyroscope-otel-javaagent-extension.jar"))
+      overwrite(false)
+    }
+
 tasks.named<JavaExec>("run") {
+  dependsOn(downloadPyroscopeExtension)
   doFirst {
     val otelAgentJar = configurations[otelAgent.name].singleFile.absolutePath
     jvmArgs("-javaagent:$otelAgentJar")
+    val pyroscopeOtelExtensionJar = downloadPyroscopeExtension.get().dest.absolutePath
+    environment("OTEL_JAVAAGENT_EXTENSIONS", pyroscopeOtelExtensionJar)
 
     val envVars = DotEnvBuilder.dotEnv {
       addFile("$rootDir/.env")
@@ -96,6 +117,10 @@ tasks.named<JavaExec>("run") {
           )
         }
   }
+  environment("PYROSCOPE_APPLICATION_NAME", "ktor-dev")
+  environment("PYROSCOPE_SERVER_ADDRESS", "http://localhost:4040")
+  environment("PYROSCOPE_FORMAT", "jfr")
+  environment("OTEL_EXPERIMENTAL_ASYNCHRONOUS_CONTEXT_PROPAGATION", "true")
   environment("OTEL_SERVICE_NAME", "ktor-dev")
   environment("OTEL_TRACES_EXPORTER", "otlp")
   environment("OTEL_METRICS_EXPORTER", "otlp")

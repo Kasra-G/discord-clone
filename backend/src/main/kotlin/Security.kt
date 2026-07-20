@@ -19,10 +19,14 @@ fun Application.configureSecurity() {
     jwt {
       realm = jwtRealm
       authHeader { call ->
-        val value =
-            call.request.cookies[AuthenticationService.ACCESS_TOKEN_COOKIE_NAME]
-                ?: throw ServiceException.Unauthorized("Missing access token authorization cookie")
-        HttpAuthHeader.Single("Bearer", value)
+        runCatching {
+              val jwt = call.request.cookies[AuthenticationService.ACCESS_TOKEN_COOKIE_NAME]
+              requireNotNull(jwt)
+              HttpAuthHeader.Single("Bearer", jwt)
+            }
+            .getOrElse {
+              throw ServiceException.Unauthorized("Missing access token authorization cookie")
+            }
       }
       verifier(
           JWT.require(Algorithm.HMAC256(jwtSecret))

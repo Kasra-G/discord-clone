@@ -1,9 +1,12 @@
 package com.ghkasra.discordclone.repository
 
 import com.ghkasra.discordclone.service.Username
+import io.opentelemetry.context.Context
+import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -14,6 +17,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 @Serializable
@@ -37,12 +41,14 @@ class UserCredentialRepository(val db: Database) {
   }
 
   @WithSpan
-  fun findByUsername(username: Username): UserCredential? =
-      transaction(db) {
-        UserCredentials.selectAll()
-            .where { UserCredentials.username.eq(username.value) }
-            .singleOrNull()
-            ?.toUserCredential()
+  suspend fun findByUsername(username: Username): UserCredential? =
+      withContext(Context.current().asContextElement()) {
+        suspendTransaction(db) {
+          UserCredentials.selectAll()
+              .where { UserCredentials.username.eq(username.value) }
+              .singleOrNull()
+              ?.toUserCredential()
+        }
       }
 
   @WithSpan

@@ -33,7 +33,7 @@ class UserService(val authService: AuthenticationService, val userRepository: Us
 
   @WithSpan
   context(logger: Logger)
-  fun login(request: UserLoginRequest): UserLoginResponse {
+  suspend fun login(request: UserLoginRequest): UserLoginResponse {
     logger.debug("Attempting to log in user ${request.username}")
     val authenticated =
         authService.authenticateByUserLogin(UserLogin(request.username, request.password))
@@ -47,9 +47,7 @@ class UserService(val authService: AuthenticationService, val userRepository: Us
     checkNotNull(userDetails) {
       "Critical: Username ${request.username} has credentials but no user details!"
     }
-
-    val refreshToken = authService.issueRefreshToken(userDetails.id, request.deviceId)
-    val bearerTokens = authService.generateAccessToken(refreshToken, request.deviceId)
+    val bearerTokens = authService.issueInitialBearerTokens(userDetails.id, request.deviceId)
     logger.debug("Logged in user ${userDetails.username}")
     return UserLoginResponse(bearerTokens.refreshToken, bearerTokens.accessToken, userDetails)
   }

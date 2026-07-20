@@ -35,13 +35,16 @@ import io.ktor.server.request.requirePathParameter
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import java.security.MessageDigest
+import io.opentelemetry.context.Context
+import io.opentelemetry.extension.kotlin.asContextElement
 import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toKotlinInstant
 import kotlin.uuid.Uuid
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.jdbc.Database
 
@@ -55,7 +58,7 @@ fun Application.configureRouting() {
   val channelRepo = ChannelRepository(db)
   val refreshTokenRepo = RefreshTokenRepository(db)
   val passwordUtil = PasswordUtil(BCrypt.withDefaults())
-  val hashUtil = HashUtil(MessageDigest.getInstance("SHA-256"))
+  val hashUtil = HashUtil()
   val tokenFactory = RefreshTokenFactory()
   val userCredentialRepo = UserCredentialRepository(db)
   val authService =
@@ -87,7 +90,11 @@ fun Application.configureRouting() {
         }
         post("/users/login") {
           val request = call.receive<UserLoginRequest>()
-          val response = userService.login(request)
+
+          val response =
+              withContext(Dispatchers.IO + Context.current().asContextElement()) {
+                userService.login(request)
+              }
           setAuthorizationCookies(BearerTokens(response.refreshToken, response.accessToken))
           call.respond(
               HttpStatusCode.OK,
@@ -98,7 +105,12 @@ fun Application.configureRouting() {
           val request = call.receive<AccessTokenRefreshRequest>()
           val refreshToken =
               RefreshToken(call.requireCookie(AuthenticationService.REFRESH_TOKEN_COOKIE_NAME))
-          val response = authService.generateAccessToken(refreshToken, request.deviceId)
+
+          // TODO: consider Dispatchers.IO.limitedParallelism(1) for SQLITE DB Writes
+          val response =
+              withContext(Dispatchers.IO + Context.current().asContextElement()) {
+                authService.refresh(refreshToken)
+              }
           setAuthorizationCookies(BearerTokens(response.refreshToken, response.accessToken))
           call.respond(
               HttpStatusCode.OK,
